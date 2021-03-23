@@ -1,14 +1,21 @@
+import math
 import os
 import glob
 import pickle
 from os.path import isfile
 
 import pydicom
+from scipy.spatial import ConvexHull, Delaunay
+from tqdm import tqdm
 
+from common import MAX_HEIGHT, MAX_WIDTH, BOX_SIZE
 from mp import process
+from mp_plot import mp_plot, mp_plot_2
 from utils import get_instance_files
 from vedo.io import load
+import numpy as np
 from vedo.plotter import show
+from sklearn.cluster import DBSCAN
 
 
 def process_ct_instances(ct_instances):
@@ -33,27 +40,50 @@ def predict(args):
     return final_json
 
 
+def is_p_inside_points_hull(points, p):
+    hull = ConvexHull(points)
+    points.append(p)
+    new_hull = ConvexHull(points)
+    l1 = list(hull.vertices)
+    l1.sort()
+    l2 = list(new_hull.vertices)
+    l2.sort()
+    if l1 == l2:
+        return True
+    else:
+        return False
+
+
 if __name__ == "__main__":
     ct_mod_dir = 'ct_mod_dir'
+    if os.path.exists(ct_mod_dir):
+        g = load(ct_mod_dir)
+        show(g)
     if os.path.exists('points.pkl'):
         with open('points.pkl', 'rb') as f:
+            data = list()
+            rs = pickle.load(f)
+            for r in rs:
+                affected_points = r[8]
+                data.extend(affected_points)
+            db = DBSCAN(eps=32, min_samples=1).fit(data)
+            labels = db.labels_
+            num_of_clusters = set(labels)
+            print(num_of_clusters)
+            clusters = dict()
+            for label, point in zip(labels, data):
+                if clusters.get(label) is None:
+                    clusters[label] = [point]
+                else:
+                    clusters.get(label).append(point)
+
             if os.path.exists(ct_mod_dir) is False:
                 os.makedirs(ct_mod_dir)
-                rs = pickle.load(f)
-                points = list()
-                counter = 1
-                for r in rs:
-                    affected_points = r[8]
-                    meta_data_dicom = r[9]
-                    for (x, y) in affected_points:
-                        meta_data_dicom.pixel_array[x][y] = 2000
-                    meta_data_dicom.PixelData = meta_data_dicom.pixel_array.tobytes()
-                    pydicom.dcmwrite(ct_mod_dir + '/' + str(counter) + '.dcm', meta_data_dicom)
-                    counter += 1
+                mp_plot(rs, clusters, ct_mod_dir)
                 g = load(ct_mod_dir)
                 show(g)
     else:
-        test_sids = ['1.2.826.0.1.3680043.8.1678.101.10637242073975371769.339989']
+        test_sids = ['1.2.826.0.1.3680043.8.1678.101.10637217542821864049.962592']
         for sid in test_sids:
             try:
                 param = dict()

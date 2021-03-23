@@ -62,12 +62,9 @@ class CTSlice:
                 self.__is_valid = True
                 for box in self.__boxes:
                     labels, confidences = box.get_label()
-                    left_corner_x = box.get_four_corners()[0][0]
-                    left_corner_y = box.get_four_corners()[0][1]
+                    center_x, center_y = box.get_center()
                     if labels[0] != LABEL_NORMAL:
-                        for x in range(left_corner_x, left_corner_x + 16, 1):
-                            for y in range(left_corner_y, left_corner_y + 16, 1):
-                                self.affected_boxes.append((labels[0], confidences[0], (x, y)))
+                        self.affected_boxes.append((labels[0], confidences[0], [center_x, center_y, self.__pos_z]))
         else:
             self.__is_valid = False
 
