@@ -172,7 +172,8 @@ class CTSlice:
         for affected_box in self.affected_boxes:
             label = affected_box[0]
             confidence = affected_box[1]
-            affected_points.append(affected_box[2])
+            if int(confidence) == int(100.0):
+                affected_points.append((affected_box[2], label))
             if label == LABEL_GROUND_GLASS_OPACITY and confidence > 90.0:
                 num_of_ggo += 1
             elif label == LABEL_CONSOLIDATION and confidence > 90.0:

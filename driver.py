@@ -2,18 +2,17 @@ import math
 import os
 import glob
 import pickle
+import random
 from os.path import isfile
 
-import pydicom
-from scipy.spatial import ConvexHull, Delaunay
-from tqdm import tqdm
+from scipy.spatial import ConvexHull
 
-from common import MAX_HEIGHT, MAX_WIDTH, BOX_SIZE
+from common import LABEL_GROUND_GLASS_OPACITY, LABEL_CONSOLIDATION, LABEL_SUB_PLEURAL_BAND, LABEL_FIBROSIS, \
+    LABEL_PLEURAL_EFFUSION, LABEL_PNEUMOTHORAX
 from mp import process
 from mp_plot import mp_plot, mp_plot_2
 from utils import get_instance_files
 from vedo.io import load
-import numpy as np
 from vedo.plotter import show
 from sklearn.cluster import DBSCAN
 
@@ -62,10 +61,16 @@ if __name__ == "__main__":
     if os.path.exists('points.pkl'):
         with open('points.pkl', 'rb') as f:
             data = list()
+            color_map = dict()
             rs = pickle.load(f)
             for r in rs:
-                affected_points = r[8]
-                data.extend(affected_points)
+                for af in r[8]:
+                    x = int(math.floor(af[0][0]))
+                    y = int(math.floor(af[0][1]))
+                    z = int(math.floor(af[0][2]))
+                    v = af[1]
+                    color_map[(x, y, z)] = v
+                    data.append([x, y, z])
             db = DBSCAN(eps=32, min_samples=1).fit(data)
             labels = db.labels_
             num_of_clusters = set(labels)
@@ -79,11 +84,11 @@ if __name__ == "__main__":
 
             if os.path.exists(ct_mod_dir) is False:
                 os.makedirs(ct_mod_dir)
-                mp_plot(rs, clusters, ct_mod_dir)
+                mp_plot(rs, clusters, color_map, ct_mod_dir)
                 g = load(ct_mod_dir)
                 show(g)
     else:
-        test_sids = ['1.2.826.0.1.3680043.8.1678.101.10637217542821864049.962592']
+        test_sids = ['1.2.826.0.1.3680043.8.1678.101.10637242073975371769.339989']
         for sid in test_sids:
             try:
                 param = dict()
