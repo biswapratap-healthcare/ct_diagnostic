@@ -2,6 +2,7 @@ import math
 import os
 import random
 
+import miniball
 import pydicom
 import numpy as np
 import concurrent.futures
@@ -22,32 +23,54 @@ def get_color_random(color_map, point):
         return 2048
 
 def get_color(color_map, point):
+    return 3025
+'''
     ret = 2000
     for key, value in color_map.items():
         dst = distance.euclidean(key, point)
         if dst < BOX_SIZE / 2:
             if value.lower() == LABEL_GROUND_GLASS_OPACITY.lower():
-                ret = 4000
-                break
-            elif value.lower() == LABEL_CONSOLIDATION.lower():
-                ret = 3500
-                break
-            elif value.lower() == LABEL_SUB_PLEURAL_BAND.lower():
-                ret = 3000
-                break
-            elif value.lower() == LABEL_FIBROSIS.lower():
-                ret = 2500
-                break
-            elif value.lower() == LABEL_PLEURAL_EFFUSION.lower():
                 ret = 2000
                 break
+            elif value.lower() == LABEL_CONSOLIDATION.lower():
+                ret = 1000
+                break
+            elif value.lower() == LABEL_SUB_PLEURAL_BAND.lower():
+                ret = 500
+                break
+            elif value.lower() == LABEL_FIBROSIS.lower():
+                ret = -500
+                break
+            elif value.lower() == LABEL_PLEURAL_EFFUSION.lower():
+                ret = -1000
+                break
             elif value.lower() == LABEL_PNEUMOTHORAX.lower():
-                ret = 1500
+                ret = -2000
                 break
             else:
                 ret = 1000
                 break
     return ret
+'''
+
+
+def checkpoint(x, y, z, center, radius):
+    d = math.sqrt((x - center[0]) * (x - center[0]) +
+                  (y - center[1]) * (y - center[1]) +
+                  (z - center[2]) * (z - center[2]))
+    if d < radius:
+        return True
+    else:
+        return False
+
+def worker_plot_2(inp):
+    r = inp[0]
+    ct_mod_dir = inp[3]
+    meta_data_dicom = r[9]
+    dt = datetime.datetime.now(timezone.utc)
+    utc_time = dt.replace(tzinfo=timezone.utc)
+    utc_timestamp = utc_time.timestamp()
+    pydicom.dcmwrite(ct_mod_dir + '/' + str(utc_timestamp) + '_' + str(os.getpid()) + '.dcm', meta_data_dicom)
 
 
 def worker_plot(inp):
@@ -56,6 +79,7 @@ def worker_plot(inp):
     color_map = inp[2]
     ct_mod_dir = inp[3]
     meta_data_dicom = r[9]
+    meta_data_dicom.pixel_array.fill(0)
     z = int(math.floor(float(meta_data_dicom.ImagePositionPatient[2])))
     for key, new_value in clusters.items():
         try:

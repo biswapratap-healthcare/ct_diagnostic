@@ -1,8 +1,12 @@
 tqdm==4.59.0
 pydicom==2.1.2
-numpy==1.20.1
-matplotlib==3.3.4
+numpy==1.20.2
+matplotlib==3.4.1
 scikit-image==0.18.1
 tensorflow==2.4.1
 vedo
 scikit-learn==0.24.1
+miniball==1.0.4
+pandas==1.2.3
+scipy==1.6.2
+
