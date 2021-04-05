@@ -7,7 +7,7 @@ from os.path import isfile
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from skimage import measure
 import matplotlib.pyplot as plt
-from skimage.morphology import disk, opening
+from skimage.morphology import disk, opening, closing
 
 from utils import get_instance_files
 
@@ -69,7 +69,7 @@ def transform_to_hu(slices):
 def segment_lung_mask(image):
     segmented = np.zeros(image.shape)
     for n in range(image.shape[0]):
-        binary_image = np.array(image[n] > -200, dtype=np.int8) + 1
+        binary_image = np.array(image[n] > -320, dtype=np.int8) + 1
         labels = measure.label(binary_image)
         bad_labels = np.unique([labels[0, :], labels[-1, :], labels[:, 0], labels[:, -1]])
         for bad_label in bad_labels:
@@ -93,37 +93,97 @@ def set_manual_window(hu_image, custom_center, custom_width):
     return w_image
 
 
-def plot_3d(p_segmented_lungs, p_affected_images, p_threshold_lung, p_threshold_affected):
-    p_affected_images_t = p_affected_images.transpose(2, 1, 0)
+def plot_3d(p_segmented_lungs, p_ggo_images, p_con_images, p_fib_images, p_threshold_lung, p_threshold_affected):
+    p_ggo_images_t = p_ggo_images.transpose(2, 1, 0)
+    p_con_images_t = p_con_images.transpose(2, 1, 0)
+    p_fib_images_t = p_fib_images.transpose(2, 1, 0)
     p_segmented_lungs_t = p_segmented_lungs.transpose(2, 1, 0)
-    verts_affected, faces_affected, _, _ = measure.marching_cubes(p_affected_images_t,
-                                                                  p_threshold_affected,
-                                                                  step_size=3)
+
+    verts_ggo, faces_ggo, _, _ = measure.marching_cubes(p_ggo_images_t,
+                                                        p_threshold_affected,
+                                                        step_size=3)
+
+    verts_con, faces_con, _, _ = measure.marching_cubes(p_con_images_t,
+                                                        p_threshold_affected,
+                                                        step_size=3)
+
+    verts_fib, faces_fib, _, _ = measure.marching_cubes(p_fib_images_t,
+                                                        p_threshold_affected,
+                                                        step_size=3)
+
     verts_lung, faces_lung, _, _ = measure.marching_cubes(p_segmented_lungs_t,
                                                           p_threshold_lung,
                                                           step_size=3)
     fig = plt.figure(figsize=(10, 10))
     ax = fig.add_subplot(111, projection='3d')
-    mesh_affected = Poly3DCollection(verts_affected[faces_affected], alpha=0.8)
-    mesh_affected.set_facecolor("r")
-    mesh_lung = Poly3DCollection(verts_lung[faces_lung], alpha=0.2)
+
+    mesh_ggo = Poly3DCollection(verts_ggo[faces_ggo], alpha=0.8)
+    mesh_ggo.set_facecolor("r")
+
+    mesh_con = Poly3DCollection(verts_ggo[faces_con], alpha=0.8)
+    mesh_con.set_facecolor("g")
+
+    mesh_fib = Poly3DCollection(verts_ggo[faces_fib], alpha=0.8)
+    mesh_fib.set_facecolor("y")
+
+    mesh_lung = Poly3DCollection(verts_lung[faces_lung], alpha=0.1)
     mesh_lung.set_facecolor("navy")
-    ax.add_collection3d(mesh_affected)
+
+    ax.add_collection3d(mesh_ggo)
+    ax.add_collection3d(mesh_con)
+    ax.add_collection3d(mesh_fib)
     ax.add_collection3d(mesh_lung)
+
     ax.set_xlim(0, p_segmented_lungs_t.shape[0])
     ax.set_ylim(0, p_segmented_lungs_t.shape[1])
     ax.set_zlim(0, p_segmented_lungs_t.shape[2])
-    # plt.show()
-    plt.savefig('foo.png', bbox_inches='tight')
+    plt.savefig('natural.png', bbox_inches='tight')
+    ax.view_init(90, 0)
+    plt.draw()
+    plt.savefig('top.png', bbox_inches='tight')
+    ax.view_init(0, 180)
+    plt.draw()
+    plt.savefig('lateral.png', bbox_inches='tight')
+    ax.view_init(0, 270)
+    plt.draw()
+    plt.savefig('front.png', bbox_inches='tight')
 
 
 if __name__ == "__main__":
     study_instance_id = '1.2.826.0.1.3680043.8.1678.101.10637217542821864049.962592'
     scans_lung = load_scans(study_instance_id)
-    scans_affected = load_scans_2('./../ct_predictor_2/ct_mod_dir/')
     hu_scans_lung = transform_to_hu(scans_lung)
     segmented_lungs = segment_lung_mask(hu_scans_lung)
-    affected_images = np.stack([file.pixel_array for file in scans_affected])
-    affected_images = affected_images.astype(np.int16)
-    plot_3d(segmented_lungs, affected_images, -600, 100)
+
+    scans_ggo = load_scans_2('./../ct_predictor_2/ct_ggo_dir/')
+    ggo_images = np.stack([file.pixel_array for file in scans_ggo])
+    ggo_images = ggo_images.astype(np.int16)
+
+    min_ggo_v = ggo_images.min()
+    max_ggo_v = ggo_images.max()
+
+    if min_ggo_v == max_ggo_v == 0.0:
+        ggo_images[0][0][0] = 3500
+
+    scans_con = load_scans_2('./../ct_predictor_2/ct_con_dir/')
+    con_images = np.stack([file.pixel_array for file in scans_con])
+    con_images = con_images.astype(np.int16)
+
+    min_con_v = con_images.min()
+    max_con_v = con_images.max()
+
+    if min_con_v == max_con_v == 0.0:
+        con_images[0][0][0] = 3400
+
+    scans_fib = load_scans_2('./../ct_predictor_2/ct_fib_dir/')
+    fib_images = np.stack([file.pixel_array for file in scans_fib])
+    fib_images = fib_images.astype(np.int16)
+
+    min_fib_v = fib_images.min()
+    max_fib_v = fib_images.max()
+
+    if min_fib_v == max_fib_v == 0.0:
+        fib_images[0][0][0] = 3300
+
+    plot_3d(segmented_lungs, ggo_images, con_images, fib_images, -600, 100)
     print('c')

@@ -108,16 +108,26 @@ def is_p_inside_points_hull(points, p):
 
 
 if __name__ == "__main__":
-    ct_mod_dir = 'ct_mod_dir'
-    if os.path.exists(ct_mod_dir):
-        twoDPlot2(ct_mod_dir)
-        # g = load(ct_mod_dir)
-        # show(g)
+    ct_ggo_dir = 'ct_ggo_dir'
+    ct_con_dir = 'ct_con_dir'
+    ct_fib_dir = 'ct_fib_dir'
+
+    if os.path.exists(ct_fib_dir):
+        dicom_files = glob.glob(ct_fib_dir + '/**/*', recursive=True)
+        slices = [pydicom.dcmread(dicom_file) for dicom_file in dicom_files]
+        slices.sort(key=lambda x: float(x.ImagePositionPatient[2]))
+        images = np.stack([file.pixel_array for file in slices])
+        images = images.astype(np.int16)
+        min_v = images.min()
+        max_v = images.max()
+        g = load(ct_fib_dir)
+        show(g)
         exit(0)
+
     if os.path.exists('points.pkl'):
         with open('points.pkl', 'rb') as f:
             data = list()
-            color_map = dict()
+            type_map = dict()
             rs = pickle.load(f)
             for r in rs:
                 for af in r[8]:
@@ -125,8 +135,9 @@ if __name__ == "__main__":
                     y = int(math.floor(af[0][1]))
                     z = int(math.floor(af[0][2]))
                     v = af[1]
-                    color_map[(x, y, z)] = v
+                    type_map[(x, y, z)] = v
                     data.append([x, y, z])
+
             db = DBSCAN(eps=32, min_samples=1).fit(data)
             labels = db.labels_
             components = db.components_
@@ -138,10 +149,18 @@ if __name__ == "__main__":
                     clusters[label] = [point]
                 else:
                     clusters.get(label).append(point)
-            if os.path.exists(ct_mod_dir) is False:
-                os.makedirs(ct_mod_dir)
-                mp_plot(rs, clusters, color_map, ct_mod_dir)
-                g = load(ct_mod_dir)
+
+            if os.path.exists(ct_ggo_dir) is False and \
+               os.path.exists(ct_con_dir) is False and \
+               os.path.exists(ct_fib_dir) is False:
+
+                os.makedirs(ct_ggo_dir)
+                os.makedirs(ct_con_dir)
+                os.makedirs(ct_fib_dir)
+
+                mp_plot(rs, clusters, type_map, ct_ggo_dir, ct_con_dir, ct_fib_dir)
+
+                g = load(ct_ggo_dir)
                 show(g)
     else:
         test_sids = ['1.2.826.0.1.3680043.8.1678.101.10637217542821864049.962592']

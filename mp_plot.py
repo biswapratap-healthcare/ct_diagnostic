@@ -1,8 +1,7 @@
+import copy
 import math
 import os
-import random
 
-import miniball
 import pydicom
 import numpy as np
 import concurrent.futures
@@ -10,77 +9,52 @@ import concurrent.futures
 from scipy.spatial import distance
 from scipy.spatial.qhull import Delaunay
 
-from common import BOX_SIZE, LABEL_GROUND_GLASS_OPACITY, LABEL_CONSOLIDATION, LABEL_SUB_PLEURAL_BAND, LABEL_FIBROSIS, \
-    LABEL_PLEURAL_EFFUSION, LABEL_PNEUMOTHORAX
+from common import BOX_SIZE, LABEL_GROUND_GLASS_OPACITY, LABEL_CONSOLIDATION, LABEL_FIBROSIS
 from datetime import timezone
 import datetime
 
 
-def get_color_random(color_map, point):
-    if point[1] > 256:
-        return 4096
-    else:
-        return 2048
-
-def get_color(color_map, point):
-    return 3025
-'''
-    ret = 2000
-    for key, value in color_map.items():
+def get_type(type_map, point):
+    ret = 0
+    for key, value in type_map.items():
         dst = distance.euclidean(key, point)
         if dst < BOX_SIZE / 2:
             if value.lower() == LABEL_GROUND_GLASS_OPACITY.lower():
-                ret = 2000
+                ret = 3500
                 break
             elif value.lower() == LABEL_CONSOLIDATION.lower():
-                ret = 1000
-                break
-            elif value.lower() == LABEL_SUB_PLEURAL_BAND.lower():
-                ret = 500
+                ret = 3400
                 break
             elif value.lower() == LABEL_FIBROSIS.lower():
-                ret = -500
-                break
-            elif value.lower() == LABEL_PLEURAL_EFFUSION.lower():
-                ret = -1000
-                break
-            elif value.lower() == LABEL_PNEUMOTHORAX.lower():
-                ret = -2000
+                ret = 3300
                 break
             else:
-                ret = 1000
+                ret = 0
                 break
     return ret
-'''
-
-
-def checkpoint(x, y, z, center, radius):
-    d = math.sqrt((x - center[0]) * (x - center[0]) +
-                  (y - center[1]) * (y - center[1]) +
-                  (z - center[2]) * (z - center[2]))
-    if d < radius:
-        return True
-    else:
-        return False
-
-def worker_plot_2(inp):
-    r = inp[0]
-    ct_mod_dir = inp[3]
-    meta_data_dicom = r[9]
-    dt = datetime.datetime.now(timezone.utc)
-    utc_time = dt.replace(tzinfo=timezone.utc)
-    utc_timestamp = utc_time.timestamp()
-    pydicom.dcmwrite(ct_mod_dir + '/' + str(utc_timestamp) + '_' + str(os.getpid()) + '.dcm', meta_data_dicom)
 
 
 def worker_plot(inp):
     r = inp[0]
     clusters = inp[1]
-    color_map = inp[2]
-    ct_mod_dir = inp[3]
+    type_map = inp[2]
+    ct_ggo_dir = inp[3]
+    ct_con_dir = inp[4]
+    ct_fib_dir = inp[5]
     meta_data_dicom = r[9]
     meta_data_dicom.pixel_array.fill(0)
+
+    meta_data_dicom_ggo = copy.deepcopy(meta_data_dicom)
+    meta_data_dicom_ggo.pixel_array.fill(0)
+
+    meta_data_dicom_con = copy.deepcopy(meta_data_dicom)
+    meta_data_dicom_con.pixel_array.fill(0)
+
+    meta_data_dicom_fib = copy.deepcopy(meta_data_dicom)
+    meta_data_dicom_fib.pixel_array.fill(0)
+
     z = int(math.floor(float(meta_data_dicom.ImagePositionPatient[2])))
+
     for key, new_value in clusters.items():
         try:
             c_x = [c[0] for c in new_value]
@@ -92,27 +66,58 @@ def worker_plot(inp):
             hull = Delaunay(np.array(new_value))
         except Exception as e:
             continue
+
         for x in range(min_x, max_x, 1):
             for y in range(min_y, max_y, 1):
                 point = [x, y, z]
                 if hull.find_simplex(np.array(point)) >= 0:
-                    color = get_color(color_map, point)
-                    meta_data_dicom.pixel_array[x][y] = color
-    meta_data_dicom.PixelData = meta_data_dicom.pixel_array.tobytes()
+                    t = get_type(type_map, point)
+                    if t == 3500:
+                        meta_data_dicom_ggo.pixel_array[x][y] = t
+                        meta_data_dicom_con.pixel_array[x][y] = 0
+                        meta_data_dicom_fib.pixel_array[x][y] = 0
+                    elif t == 3400:
+                        print("Found Consolidation")
+                        meta_data_dicom_ggo.pixel_array[x][y] = 0
+                        meta_data_dicom_con.pixel_array[x][y] = t
+                        meta_data_dicom_fib.pixel_array[x][y] = 0
+                    elif t == 3300:
+                        print("Found Fibrosis")
+                        meta_data_dicom_ggo.pixel_array[x][y] = 0
+                        meta_data_dicom_con.pixel_array[x][y] = 0
+                        meta_data_dicom_fib.pixel_array[x][y] = t
+                    else:
+                        meta_data_dicom_ggo.pixel_array[x][y] = t
+                        meta_data_dicom_con.pixel_array[x][y] = t
+                        meta_data_dicom_fib.pixel_array[x][y] = t
+
+    meta_data_dicom_ggo.PixelData = meta_data_dicom_ggo.pixel_array.tobytes()
     dt = datetime.datetime.now(timezone.utc)
     utc_time = dt.replace(tzinfo=timezone.utc)
     utc_timestamp = utc_time.timestamp()
-    pydicom.dcmwrite(ct_mod_dir + '/' + str(utc_timestamp) + '_' + str(os.getpid()) + '.dcm', meta_data_dicom)
+    pydicom.dcmwrite(ct_ggo_dir + '/' + str(utc_timestamp) + '_' + str(os.getpid()) + '_ggo.dcm', meta_data_dicom_ggo)
+
+    meta_data_dicom_con.PixelData = meta_data_dicom_con.pixel_array.tobytes()
+    dt = datetime.datetime.now(timezone.utc)
+    utc_time = dt.replace(tzinfo=timezone.utc)
+    utc_timestamp = utc_time.timestamp()
+    pydicom.dcmwrite(ct_con_dir + '/' + str(utc_timestamp) + '_' + str(os.getpid()) + '_con.dcm', meta_data_dicom_con)
+
+    meta_data_dicom_fib.PixelData = meta_data_dicom_fib.pixel_array.tobytes()
+    dt = datetime.datetime.now(timezone.utc)
+    utc_time = dt.replace(tzinfo=timezone.utc)
+    utc_timestamp = utc_time.timestamp()
+    pydicom.dcmwrite(ct_fib_dir + '/' + str(utc_timestamp) + '_' + str(os.getpid()) + '_fib.dcm', meta_data_dicom_fib)
 
 
-def mp_plot(rs, clusters, color_map, ct_mod_dir):
+def mp_plot(rs, clusters, type_map, ct_ggo_dir, ct_con_dir, ct_fib_dir):
     inps = list()
     for r in rs:
-        inps.append((r, clusters, color_map, ct_mod_dir))
+        inps.append((r, clusters, type_map, ct_ggo_dir, ct_con_dir, ct_fib_dir))
     with concurrent.futures.ProcessPoolExecutor() as executor:
         executor.map(worker_plot, inps)
 
 
-def mp_plot_2(rs, clusters, color_map, ct_mod_dir):
+def mp_plot_2(rs, clusters, type_map, ct_ggo_dir, ct_con_dir, ct_fib_dir):
     for r in rs:
-        worker_plot((r, clusters, color_map, ct_mod_dir))
+        worker_plot((r, clusters, type_map, ct_ggo_dir, ct_con_dir, ct_fib_dir))
