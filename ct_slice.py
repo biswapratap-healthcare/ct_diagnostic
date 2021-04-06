@@ -46,12 +46,15 @@ class CTSlice:
                     y.append(self.__pos_y + j)
                     z.append(self.__pos_z)
 
-        self.__min_x = min(x)
-        self.__max_x = max(x)
-        self.__min_y = min(y)
-        self.__max_y = max(y)
-        self.__min_z = min(z)
-        self.__max_z = max(z)
+        if len(x) > 0:
+            self.__min_x = min(x)
+            self.__max_x = max(x)
+        if len(y) > 0:
+            self.__min_y = min(y)
+            self.__max_y = max(y)
+        if len(z) > 0:
+            self.__min_z = min(z)
+            self.__max_z = max(z)
 
         self.all_zeros = not self.__segmented_pixel_array.any()
         if not self.all_zeros:
