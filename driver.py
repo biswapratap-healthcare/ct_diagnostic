@@ -1,22 +1,13 @@
 import math
 import os
 import glob
-import pickle
 import tempfile
 from zipfile import ZipFile
-
-import numpy as np
-from os.path import isfile
-
-import pydicom
 from werkzeug.utils import secure_filename
 
 from mp import process, process_2
 from mp_plot import mp_plot, mp_plot_2
 from mp_slice_plot import mp_slice_plot_2, mp_slice_plot
-from utils import get_instance_files
-from vedo.io import load
-from vedo.plotter import show
 from sklearn.cluster import DBSCAN
 
 
@@ -100,7 +91,7 @@ def store_and_verify_file(file_from_request, work_dir):
 
 def generate_report(args, logger):
     try:
-        file_from_request = args['file']
+        file_from_request = args['zip_file']
         file_dir = tempfile.mkdtemp()
         work_dir = tempfile.mkdtemp()
         ret, file_path = store_and_verify_file(file_from_request, work_dir=file_dir)
@@ -117,3 +108,5 @@ def generate_report(args, logger):
         rv = dict()
         rv['diagnosis'] = str(e)
         return rv
+
+

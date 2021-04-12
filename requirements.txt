@@ -3,8 +3,7 @@ pydicom==2.1.2
 numpy>=1.13.3
 matplotlib==3.4.1
 scikit-image==0.18.1
-tensorflow==2.4.1
-vedo
+tensorflow==2.5.0rc0
 scikit-learn==0.24.1
 miniball==1.0.4
 pandas==1.2.3

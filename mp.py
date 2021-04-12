@@ -1,3 +1,5 @@
+import os
+
 import pydicom
 import concurrent.futures
 
@@ -24,6 +26,7 @@ def worker(inp):
     meta_data_dicom = pydicom.dcmread(ct_instance)
     ct_slice = CTSlice(meta_data_dicom)
     ggo, con, sub, fib, ple, pne, nor, affected_points = ct_slice.get_box_label_distribution()
+    print("Done : " + str(ct_instance))
     return ct_slice, ggo, con, sub, fib, ple, pne, nor, affected_points, meta_data_dicom
 
 
@@ -31,7 +34,8 @@ def process(ct_instances):
     inps = list()
     for ct_instance in ct_instances:
         inps.append(ct_instance)
-    with concurrent.futures.ProcessPoolExecutor() as executor:
+    max_workers = os.cpu_count() - 2
+    with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
         rets = executor.map(worker, inps)
         rets_list = list()
         for ret in rets:
