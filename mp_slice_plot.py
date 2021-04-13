@@ -1,7 +1,7 @@
 import concurrent.futures
 import math
 import os
-import cv2
+# import cv2
 import numpy as np
 from sklearn.cluster import DBSCAN
 
@@ -110,7 +110,7 @@ def worker_plot(inp):
 
             stacked_img = box_plot(stacked_img, min_x, max_x, min_y, max_y, key)
 
-    cv2.imwrite(os.path.join('slices', str(z_index) + '.jpg'), stacked_img)
+    # cv2.imwrite(os.path.join('slices', str(z_index) + '.jpg'), stacked_img)
 
 
 def mp_slice_plot(rs):

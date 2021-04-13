@@ -1,6 +1,7 @@
 import copy
 import math
 import os
+import random
 
 import pydicom
 import concurrent.futures
@@ -36,8 +37,8 @@ def worker_plot(inp):
         center_point = value[1]
         x_val = center_point[0]
         y_val = center_point[1]
-        for x in range(x_val - int(BOX_SIZE/2), x_val + int(BOX_SIZE/2), 1):
-            for y in range(y_val - int(BOX_SIZE/2), y_val + int(BOX_SIZE/2), 1):
+        for x in range(x_val - int(BOX_SIZE/2) + int(random.randrange(-10, 10)), x_val + int(BOX_SIZE/2) + int(random.randrange(-10, 10)), 1):
+            for y in range(y_val - int(BOX_SIZE/2) + int(random.randrange(-10, 10)), y_val + int(BOX_SIZE/2) + int(random.randrange(-10, 10)), 1):
                 if affected_type.lower() == LABEL_GROUND_GLASS_OPACITY.lower():
                     meta_data_dicom_ggo.pixel_array[x][y] = 3500
                     meta_data_dicom_con.pixel_array[x][y] = 0

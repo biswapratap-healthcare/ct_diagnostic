@@ -1,6 +1,7 @@
 import math
 import os
 import glob
+import pickle
 import tempfile
 from zipfile import ZipFile
 from werkzeug.utils import secure_filename
@@ -18,16 +19,13 @@ ct_fib_dir = 'ct_fib_dir'
 
 def process_ct_instances(ct_instances):
     rets_list = process(ct_instances)
-    # with open('points.pkl', 'wb') as fp:
-    #     pickle.dump(rets_list, fp)
-    # with open('points.pkl', 'rb') as f:
-    #     data = list()
-    #     type_map = dict()
-    #     rs = pickle.load(f)
-    data = list()
-    type_map = dict()
-    rs = rets_list
-    mp_slice_plot(rs)
+
+    with open('points.pkl', 'wb') as fp:
+        pickle.dump(rets_list, fp)
+    with open('points.pkl', 'rb') as f:
+        data = list()
+        type_map = dict()
+        rs = pickle.load(f)
 
     for r in rs:
         for af in r[8]:
