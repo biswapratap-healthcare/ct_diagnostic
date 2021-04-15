@@ -1,3 +1,5 @@
+import json
+
 import pydicom
 import numpy as np
 from tqdm import tqdm
@@ -158,3 +160,132 @@ def get_pixel_lobe_classification(x, y, min_x, max_x, min_y, max_y):
             return 'rsl'
         else:
             return 'ril'
+
+
+def create_json(study_instance_id,
+                scores,
+                ggo_count,
+                con_count,
+                sub_count,
+                fib_count,
+                ple_count,
+                abnormal_slice_count,
+                total_slice_count):
+    final_json = dict()
+    final_json['StudyInstanceUID'] = study_instance_id
+    final_json['num_of_positive_slices'] = str(abnormal_slice_count)
+    final_json['num_of_lung_slices'] = str(total_slice_count)
+    final_json['ratio_of_positive_slices'] = str(round(float(float(abnormal_slice_count) * 100.0) / float(total_slice_count), 2))
+    if ggo_count > 0:
+        final_json['focal_ggo_detections'] = "True"
+    else:
+        final_json['focal_ggo_detections'] = "False"
+    total_count = ggo_count + con_count + sub_count + fib_count + ple_count
+    final_json['ggo_ratio'] = str(round(float(float(ggo_count) * 100.0) / float(total_count), 2))
+    final_json['consolidation_ratio'] = str(round(float(float(con_count) * 100.0) / float(total_count), 2))
+
+    if scores[5] > 5:
+        result_type = 'Abnormal'
+    else:
+        result_type = 'Normal'
+
+    if scores[5] <= 5:
+        diagnosis = 'NA'
+    elif 5 < scores[5] <= 10:
+        diagnosis = 'Mild'
+    elif 10 < scores[5] <= 15:
+        diagnosis = 'Moderate'
+    else:
+        diagnosis = 'High'
+
+    diagnosis_details = str(scores[5]) + ', ' + str(scores[0]) + \
+                        ', ' + str(scores[1]) + ', ' + str(scores[2]) + \
+                        ', ' + str(scores[3]) + ', ' + str(scores[4])
+
+    final_json['ResultType'] = result_type
+    final_json['GlobalDiagnosis'] = diagnosis
+    final_json['GlobalDiagnosisDetails'] = diagnosis_details
+
+    final_json['co_rads_score'] = str(scores[5])
+    final_json['right_superior_lobe_percentage_affected'] = str(scores[0])
+    final_json['right_middle_lobe_percentage_affected'] = str(scores[1])
+    final_json['right_inferior_lobe_percentage_affected'] = str(scores[2])
+    final_json['left_superior_lobe_percentage_affected'] = str(scores[3])
+    final_json['left_inferior_lobe_percentage_affected'] = str(scores[4])
+    final_json['3DDiagnosisImage'] = ''
+    return final_json
+
+
+def get_score(percent):
+    if percent < 5.0:
+        return 1
+    elif 5.0 <= percent < 25.0:
+        return 2
+    elif 25.0 <= percent < 50.0:
+        return 3
+    elif 50.0 <= percent < 75.0:
+        return 4
+    elif 75.0 <= percent <= 100.0:
+        return 5
+    else:
+        return 0
+
+
+def get_25_score(ct_slice_objects, sid):
+    lsl_normal_count = 0.0
+    lsl_abnormal_count = 0.0
+    lml_normal_count = 0.0
+    lml_abnormal_count = 0.0
+    lil_normal_count = 0.0
+    lil_abnormal_count = 0.0
+    rsl_normal_count = 0.0
+    rsl_abnormal_count = 0.0
+    ril_normal_count = 0.0
+    ril_abnormal_count = 0.0
+
+    for ct_slice_object in ct_slice_objects:
+        lsl_normal_count += ct_slice_object.lsl_normal_count
+        lsl_abnormal_count += ct_slice_object.lsl_abnormal_count
+        lml_normal_count += ct_slice_object.lml_normal_count
+        lml_abnormal_count += ct_slice_object.lml_abnormal_count
+        lil_normal_count += ct_slice_object.lil_normal_count
+        lil_abnormal_count += ct_slice_object.lil_abnormal_count
+        rsl_normal_count += ct_slice_object.rsl_normal_count
+        rsl_abnormal_count += ct_slice_object.rsl_abnormal_count
+        ril_normal_count += ct_slice_object.ril_normal_count
+        ril_abnormal_count += ct_slice_object.ril_abnormal_count
+
+    total_score = 0.0
+
+    try:
+        lsl_percent = round((float(lsl_abnormal_count) * 100.0) /
+                            (float(lsl_normal_count) + float(lsl_abnormal_count)), 2)
+    except ZeroDivisionError as e:
+        lsl_percent = 0.00
+    total_score += get_score(lsl_percent)
+    try:
+        lml_percent = round((float(lml_abnormal_count) * 100.0) /
+                            (float(lml_normal_count) + float(lml_abnormal_count)), 2)
+    except ZeroDivisionError as e:
+        lml_percent = 0.00
+    total_score += get_score(lml_percent)
+    try:
+        lil_percent = round((float(lil_abnormal_count) * 100.0) /
+                            (float(lil_normal_count) + float(lil_abnormal_count)), 2)
+    except ZeroDivisionError as e:
+        lil_percent = 0.00
+    total_score += get_score(lil_percent)
+    try:
+        rsl_percent = round((float(rsl_abnormal_count) * 100.0) /
+                            (float(rsl_normal_count) + float(rsl_abnormal_count)), 2)
+    except ZeroDivisionError as e:
+        rsl_percent = 0.00
+    total_score += get_score(rsl_percent)
+    try:
+        ril_percent = round((float(ril_abnormal_count) * 100.0) /
+                            (float(ril_normal_count) + float(ril_abnormal_count)), 2)
+    except ZeroDivisionError as e:
+        ril_percent = 0.00
+    total_score += get_score(ril_percent)
+
+    return lsl_percent, lml_percent, lil_percent, rsl_percent, ril_percent, total_score

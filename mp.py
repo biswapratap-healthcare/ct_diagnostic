@@ -44,5 +44,7 @@ def process(ct_instances):
 
 
 def process_2(ct_instances):
+    rets_list = list()
     for ct_instance in ct_instances:
-        worker(ct_instance)
+        rets_list.append(worker(ct_instance))
+    return rets_list

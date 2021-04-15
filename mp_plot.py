@@ -76,6 +76,8 @@ def worker_plot(inp):
     utc_timestamp = utc_time.timestamp()
     pydicom.dcmwrite(ct_fib_dir + '/' + str(utc_timestamp) + '_' + str(os.getpid()) + '_fib.dcm', meta_data_dicom_fib)
 
+    print("MP Plot Done : " + str(z))
+
 
 def mp_plot(rs, type_map, ct_ggo_dir, ct_con_dir, ct_fib_dir):
     inps = list()

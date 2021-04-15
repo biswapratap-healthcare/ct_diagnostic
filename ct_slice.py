@@ -71,6 +71,12 @@ class CTSlice:
         else:
             self.__is_valid = False
 
+    def is_valid(self):
+        return self.__is_valid
+
+    def get_image_position_patient(self):
+        return self.__image_position_patient
+
     def __voxels_to_pixels__(self):
         pix_arr = np.array(self.__voxel_array)
         return voxels_to_pixels(pix_arr)

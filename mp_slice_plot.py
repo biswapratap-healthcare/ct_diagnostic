@@ -1,7 +1,7 @@
 import concurrent.futures
 import math
 import os
-# import cv2
+import cv2
 import numpy as np
 from sklearn.cluster import DBSCAN
 
@@ -66,18 +66,20 @@ def box_plot(stacked_img, min_x, max_x, min_y, max_y, t):
 def worker_plot(inp):
     z_index = 0
     type_map = dict()
+    r = inp[0]
+    output_dir = inp[1]
 
-    if len(inp[8]) == 0:
+    if len(r[8]) == 0:
         return
 
-    metadata_dicom = inp[9]
+    metadata_dicom = r[9]
     img = metadata_dicom.pixel_array
     img_2d = img.astype(float)
     img_2d_scaled = (np.maximum(img_2d, 0) / img_2d.max()) * 255.0
     img_2d_scaled = np.uint8(img_2d_scaled)
     stacked_img = np.stack((img_2d_scaled,) * 3, axis=-1)
 
-    for af in inp[8]:
+    for af in r[8]:
         x = int(math.floor(af[0][0]))
         y = int(math.floor(af[0][1]))
         z = z_index = int(math.floor(af[0][2]))
@@ -91,8 +93,8 @@ def worker_plot(inp):
         db = DBSCAN(eps=50, min_samples=1).fit(value)
         labels = list(db.labels_)
         components = [list(c) for c in db.components_]
-        num_of_clusters = set(labels)
-        print(num_of_clusters)
+        # num_of_clusters = set(labels)
+        # print(num_of_clusters)
         clusters = dict()
         for label, point in zip(labels, components):
             if clusters.get(label) is None:
@@ -110,17 +112,17 @@ def worker_plot(inp):
 
             stacked_img = box_plot(stacked_img, min_x, max_x, min_y, max_y, key)
 
-    # cv2.imwrite(os.path.join('slices', str(z_index) + '.jpg'), stacked_img)
+    cv2.imwrite(os.path.join(output_dir, str(z_index) + '.jpg'), stacked_img)
 
 
-def mp_slice_plot(rs):
+def mp_slice_plot(rs, output_dir):
     inps = list()
     for r in rs:
-        inps.append(r)
+        inps.append((r, output_dir))
     with concurrent.futures.ProcessPoolExecutor() as executor:
         executor.map(worker_plot, inps)
 
 
-def mp_slice_plot_2(rs):
+def mp_slice_plot_2(rs, output_dir):
     for r in rs:
-        worker_plot(r)
+        worker_plot((r, output_dir))

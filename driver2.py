@@ -93,7 +93,13 @@ def set_manual_window(hu_image, custom_center, custom_width):
     return w_image
 
 
-def plot_3d(p_segmented_lungs, p_ggo_images, p_con_images, p_fib_images, p_threshold_lung, p_threshold_affected):
+def plot_3d(p_segmented_lungs,
+            output_dir,
+            p_ggo_images,
+            p_con_images,
+            p_fib_images,
+            p_threshold_lung,
+            p_threshold_affected):
     p_ggo_images_t = p_ggo_images.transpose(2, 1, 0)
     p_con_images_t = p_con_images.transpose(2, 1, 0)
     p_fib_images_t = p_fib_images.transpose(2, 1, 0)
@@ -137,25 +143,25 @@ def plot_3d(p_segmented_lungs, p_ggo_images, p_con_images, p_fib_images, p_thres
     ax.set_xlim(0, p_segmented_lungs_t.shape[0])
     ax.set_ylim(0, p_segmented_lungs_t.shape[1])
     ax.set_zlim(0, p_segmented_lungs_t.shape[2])
-    plt.savefig('natural.png', bbox_inches='tight')
+    plt.savefig(output_dir + '/natural.png', bbox_inches='tight')
     ax.view_init(90, 0)
     plt.draw()
-    plt.savefig('top.png', bbox_inches='tight')
+    plt.savefig(output_dir + '/top.png', bbox_inches='tight')
     ax.view_init(0, 180)
     plt.draw()
-    plt.savefig('lateral.png', bbox_inches='tight')
+    plt.savefig(output_dir + '/lateral.png', bbox_inches='tight')
     ax.view_init(0, 270)
     plt.draw()
-    plt.savefig('front.png', bbox_inches='tight')
+    plt.savefig(output_dir + '/front.png', bbox_inches='tight')
 
 
-if __name__ == "__main__":
-    study_instance_id = '1.2.826.0.1.3680043.8.1678.101.10637217542821864049.962592'
-    scans_lung = load_scans(study_instance_id)
+# if __name__ == "__main__":
+def three_d_plot(sid_dir, output_dir, ggo_dir, con_dir, fib_dir):
+    scans_lung = load_scans_2(sid_dir)
     hu_scans_lung = transform_to_hu(scans_lung)
     segmented_lungs = segment_lung_mask(hu_scans_lung)
 
-    scans_ggo = load_scans_2('./../ct_predictor_2/ct_ggo_dir/')
+    scans_ggo = load_scans_2(ggo_dir)
     ggo_images = np.stack([file.pixel_array for file in scans_ggo])
     ggo_images = ggo_images.astype(np.int16)
 
@@ -165,7 +171,7 @@ if __name__ == "__main__":
     if min_ggo_v == max_ggo_v == 0.0:
         ggo_images[0][0][0] = 3500
 
-    scans_con = load_scans_2('./../ct_predictor_2/ct_con_dir/')
+    scans_con = load_scans_2(con_dir)
     con_images = np.stack([file.pixel_array for file in scans_con])
     con_images = con_images.astype(np.int16)
 
@@ -175,7 +181,7 @@ if __name__ == "__main__":
     if min_con_v == max_con_v == 0.0:
         con_images[0][0][0] = 3400
 
-    scans_fib = load_scans_2('./../ct_predictor_2/ct_fib_dir/')
+    scans_fib = load_scans_2(fib_dir)
     fib_images = np.stack([file.pixel_array for file in scans_fib])
     fib_images = fib_images.astype(np.int16)
 
@@ -185,5 +191,4 @@ if __name__ == "__main__":
     if min_fib_v == max_fib_v == 0.0:
         fib_images[0][0][0] = 3300
 
-    plot_3d(segmented_lungs, ggo_images, con_images, fib_images, -600, 100)
-    print('c')
+    plot_3d(segmented_lungs, output_dir, ggo_images, con_images, fib_images, -600, 100)
