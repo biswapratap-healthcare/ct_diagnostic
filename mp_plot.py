@@ -10,6 +10,8 @@ from common import BOX_SIZE, LABEL_GROUND_GLASS_OPACITY, LABEL_CONSOLIDATION, LA
 from datetime import timezone
 import datetime
 
+from utils import read_progress, write_progress
+
 
 def worker_plot(inp):
     r = inp[0]
@@ -17,6 +19,8 @@ def worker_plot(inp):
     ct_ggo_dir = inp[2]
     ct_con_dir = inp[3]
     ct_fib_dir = inp[4]
+    total_number_of_instances = inp[5]
+    study_instance_id = inp[6]
     meta_data_dicom = r[9]
     meta_data_dicom.pixel_array.fill(0)
 
@@ -30,6 +34,10 @@ def worker_plot(inp):
     meta_data_dicom_fib.pixel_array.fill(0)
 
     z = int(math.floor(float(meta_data_dicom.ImagePositionPatient[2])))
+
+    percent = read_progress(study_instance_id)
+    new_percent = str(round(float(float(percent) + 20.0 / float(total_number_of_instances)), 2))
+    write_progress(study_instance_id, new_percent)
 
     if type_map.get(z) is not None:
         value = type_map.get(z)
@@ -76,17 +84,17 @@ def worker_plot(inp):
     utc_timestamp = utc_time.timestamp()
     pydicom.dcmwrite(ct_fib_dir + '/' + str(utc_timestamp) + '_' + str(os.getpid()) + '_fib.dcm', meta_data_dicom_fib)
 
-    print("MP Plot Done : " + str(z))
+    # print("MP Plot Done : " + str(z))
 
 
-def mp_plot(rs, type_map, ct_ggo_dir, ct_con_dir, ct_fib_dir):
+def mp_plot(study_instance_id, rs, type_map, ct_ggo_dir, ct_con_dir, ct_fib_dir):
     inps = list()
     for r in rs:
-        inps.append((r, type_map, ct_ggo_dir, ct_con_dir, ct_fib_dir))
+        inps.append((r, type_map, ct_ggo_dir, ct_con_dir, ct_fib_dir, len(rs), study_instance_id))
     with concurrent.futures.ProcessPoolExecutor() as executor:
         executor.map(worker_plot, inps)
 
 
-def mp_plot_2(rs, type_map, ct_ggo_dir, ct_con_dir, ct_fib_dir):
+def mp_plot_2(study_instance_id, rs, type_map, ct_ggo_dir, ct_con_dir, ct_fib_dir):
     for r in rs:
-        worker_plot((r, type_map, ct_ggo_dir, ct_con_dir, ct_fib_dir))
+        worker_plot((r, type_map, ct_ggo_dir, ct_con_dir, ct_fib_dir, len(rs), study_instance_id))

@@ -37,6 +37,8 @@ if __name__ == "__main__":
     ct_con_dir = 'ct_con_dir'
     ct_fib_dir = 'ct_fib_dir'
 
+    study_instance_id = "1.2.826.0.1.3680043.8.1678.101.10637213214991521358.314450"
+
     if os.path.exists('points.pkl'):
         with open('points.pkl', 'rb') as f:
             type_map = dict()
@@ -58,7 +60,7 @@ if __name__ == "__main__":
             os.makedirs(ct_con_dir)
             os.makedirs(ct_fib_dir)
 
-            mp_plot(rs, type_map, ct_ggo_dir, ct_con_dir, ct_fib_dir)
+            mp_plot(study_instance_id, rs, type_map, ct_ggo_dir, ct_con_dir, ct_fib_dir)
 
             # g = load(ct_ggo_dir)
             # show(g)

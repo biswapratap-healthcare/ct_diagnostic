@@ -9,8 +9,7 @@ from skimage import measure
 import matplotlib.pyplot as plt
 from skimage.morphology import disk, opening, closing
 
-from utils import get_instance_files
-
+from utils import get_instance_files, write_progress
 
 CT_OFFSET = 1024
 ZERO_VALUE = -2000
@@ -144,15 +143,19 @@ def plot_3d(p_segmented_lungs,
     ax.set_ylim(0, p_segmented_lungs_t.shape[1])
     ax.set_zlim(0, p_segmented_lungs_t.shape[2])
     plt.savefig(output_dir + '/natural.png', bbox_inches='tight')
+    write_progress(output_dir, "82")
     ax.view_init(90, 0)
     plt.draw()
     plt.savefig(output_dir + '/top.png', bbox_inches='tight')
+    write_progress(output_dir, "84")
     ax.view_init(0, 180)
     plt.draw()
     plt.savefig(output_dir + '/lateral.png', bbox_inches='tight')
+    write_progress(output_dir, "86")
     ax.view_init(0, 270)
     plt.draw()
     plt.savefig(output_dir + '/front.png', bbox_inches='tight')
+    write_progress(output_dir, "88")
 
 
 # if __name__ == "__main__":

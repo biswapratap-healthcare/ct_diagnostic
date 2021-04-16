@@ -79,7 +79,7 @@ def process_ct_instances(study_instance_id, ct_instances, work_dir, output_dir):
                              abnormal_slice_count,
                              total_number_of_slices)
 
-    write_progress(output_dir, "75")
+    write_progress(output_dir, "55")
 
     with open(output_dir + '/out.json', 'w') as f:
         final_json_str = json.dumps(final_json, indent=4)
@@ -88,7 +88,7 @@ def process_ct_instances(study_instance_id, ct_instances, work_dir, output_dir):
     type_map = dict()
     mp_slice_plot_2(rs, output_dir)
 
-    write_progress(output_dir, "80")
+    write_progress(output_dir, "60")
     
     for r in rs:
         for af in r[8]:
@@ -102,7 +102,10 @@ def process_ct_instances(study_instance_id, ct_instances, work_dir, output_dir):
     ct_con_dir = tempfile.mkdtemp()
     ct_fib_dir = tempfile.mkdtemp()
 
-    mp_plot(rs, type_map, ct_ggo_dir, ct_con_dir, ct_fib_dir)
+    mp_plot(study_instance_id, rs, type_map, ct_ggo_dir, ct_con_dir, ct_fib_dir)
+
+    write_progress(output_dir, "80")
+
     three_d_plot(work_dir, output_dir, ct_ggo_dir, ct_con_dir, ct_fib_dir)
 
     shutil.rmtree(ct_ggo_dir)
