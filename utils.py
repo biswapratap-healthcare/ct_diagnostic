@@ -1,8 +1,9 @@
-import json
+import os
 
 import pydicom
 import numpy as np
 from tqdm import tqdm
+from threading import Lock
 from numpy import ones, vstack
 from numpy.linalg import lstsq
 
@@ -289,3 +290,27 @@ def get_25_score(ct_slice_objects, sid):
     total_score += get_score(ril_percent)
 
     return lsl_percent, lml_percent, lil_percent, rsl_percent, ril_percent, total_score
+
+
+mutex = Lock()
+
+
+def read_progress(job_id):
+    mutex.acquire()
+    try:
+        if os.path.exists(job_id + '/progress.txt') is False:
+            return "Invalid Job ID"
+        with open(job_id + '/progress.txt', "r") as f:
+            percent = f.read()
+        return percent
+    finally:
+        mutex.release()
+
+
+def write_progress(job_id, percent):
+    mutex.acquire()
+    try:
+        with open(job_id + '/progress.txt', "w") as f:
+            f.write(percent)
+    finally:
+        mutex.release()

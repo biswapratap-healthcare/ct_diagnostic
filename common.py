@@ -11,3 +11,5 @@ LABEL_PLEURAL_EFFUSION = 'Pleural effusion'
 LABEL_PNEUMOTHORAX = 'Pneumothorax'
 LABEL_NORMAL = 'Normal'
 LABEL_UNKNOWN = 'Unknown'
+
+ERROR_FILE = "err.log"

@@ -1,3 +1,4 @@
+import json
 import math
 import os
 import glob
@@ -7,13 +8,14 @@ import tempfile
 from zipfile import ZipFile
 from werkzeug.utils import secure_filename
 
+from common import ERROR_FILE
 from driver2 import three_d_plot
 from mp import process, process_2
 from mp_plot import mp_plot, mp_plot_2
 from mp_slice_plot import mp_slice_plot_2, mp_slice_plot
 
 from report_assembler import assemble_report
-from utils import get_25_score, create_json
+from utils import get_25_score, create_json, write_progress
 
 
 def process_ct_instances(study_instance_id, ct_instances, work_dir, output_dir):
@@ -29,13 +31,17 @@ def process_ct_instances(study_instance_id, ct_instances, work_dir, output_dir):
 
     total_number_of_slices = len(ct_instances)
 
+    write_progress(study_instance_id, "20")
+
     if os.path.exists('points.pkl'):
         with open('points.pkl', 'rb') as f:
             rs = pickle.load(f)
     else:
-        rs = process(ct_instances)
+        rs = process(study_instance_id, ct_instances)
         with open('points.pkl', 'wb') as fp:
             pickle.dump(rs, fp)
+
+    write_progress(output_dir, "50")
 
     for r in rs:
         ct_slice, ggo, con, sub, fib, ple, pne, nor, affected_points, meta_data_dicom = r
@@ -73,8 +79,16 @@ def process_ct_instances(study_instance_id, ct_instances, work_dir, output_dir):
                              abnormal_slice_count,
                              total_number_of_slices)
 
+    write_progress(output_dir, "75")
+
+    with open(output_dir + '/out.json', 'w') as f:
+        final_json_str = json.dumps(final_json, indent=4)
+        f.write(final_json_str)
+
     type_map = dict()
     mp_slice_plot_2(rs, output_dir)
+
+    write_progress(output_dir, "80")
     
     for r in rs:
         for af in r[8]:
@@ -95,23 +109,20 @@ def process_ct_instances(study_instance_id, ct_instances, work_dir, output_dir):
     shutil.rmtree(ct_con_dir)
     shutil.rmtree(ct_fib_dir)
 
-    return final_json
+    write_progress(output_dir, "90")
 
 
-def predict(study_instance_id, work_dir, output_dir, logger):
+def predict(study_instance_id, work_dir, output_dir):
     files = glob.glob(work_dir + '/**/*', recursive=True)
-    final_json = process_ct_instances(study_instance_id, files, work_dir, output_dir)
-    return final_json
+    process_ct_instances(study_instance_id, files, work_dir, output_dir)
 
 
-def execute(study_instance_id, work_dir, output_dir, logger):
+def execute(study_instance_id, work_dir, output_dir):
     try:
-        fin_json_dict = predict(study_instance_id, work_dir, output_dir, logger)
-        return fin_json_dict
+        predict(study_instance_id, work_dir, output_dir)
     except Exception as e:
-        rv = dict()
-        rv['diagnosis'] = str(e)
-        return rv
+        with open(output_dir + '/' + ERROR_FILE, "a+") as f:
+            f.write(str(e))
 
 
 def store_and_verify_file(file_from_request, work_dir):
@@ -125,31 +136,14 @@ def store_and_verify_file(file_from_request, work_dir):
         return -1, str(ex)
 
 
-def generate_report(args, logger):
+def generate_report(study_instance_id, work_dir, output_dir):
     try:
-        file_from_request = args['zip_file']
-        study_instance_id = output_dir = file_from_request.filename[:-4]
-        if os.path.exists(output_dir):
-            assemble_report(output_dir)
-        else:
-            os.makedirs(output_dir)
-            file_dir = tempfile.mkdtemp()
-            work_dir = tempfile.mkdtemp()
-            ret, file_path = store_and_verify_file(file_from_request, work_dir=file_dir)
-            if ret == 0:
-                with ZipFile(file_path, 'r') as zipObj:
-                    zipObj.extractall(work_dir)
-                result = execute(study_instance_id, work_dir, output_dir, logger)
-                shutil.rmtree(file_dir)
-                shutil.rmtree(work_dir)
-                return result
-            else:
-                shutil.rmtree(file_dir)
-                shutil.rmtree(work_dir)
-                rv = dict()
-                rv['diagnosis'] = "Failed"
-                return rv
+        execute(study_instance_id, work_dir, output_dir)
+        shutil.rmtree(work_dir)
+        assemble_report(output_dir)
+        write_progress(output_dir, "100")
     except Exception as e:
-        rv = dict()
-        rv['diagnosis'] = str(e)
-        return rv
+        if os.path.exists(output_dir) is False:
+            os.makedirs(output_dir)
+        with open(output_dir + '/' + ERROR_FILE, "a+") as f:
+            f.write(str(e))

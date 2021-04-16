@@ -123,13 +123,13 @@ def plot_3d(p_segmented_lungs,
     fig = plt.figure(figsize=(10, 10))
     ax = fig.add_subplot(111, projection='3d')
 
-    mesh_ggo = Poly3DCollection(verts_ggo[faces_ggo], alpha=0.8)
+    mesh_ggo = Poly3DCollection(verts_ggo[faces_ggo], alpha=0.3)
     mesh_ggo.set_facecolor("r")
 
-    mesh_con = Poly3DCollection(verts_ggo[faces_con], alpha=0.8)
+    mesh_con = Poly3DCollection(verts_ggo[faces_con], alpha=0.3)
     mesh_con.set_facecolor("g")
 
-    mesh_fib = Poly3DCollection(verts_ggo[faces_fib], alpha=0.8)
+    mesh_fib = Poly3DCollection(verts_ggo[faces_fib], alpha=0.3)
     mesh_fib.set_facecolor("y")
 
     mesh_lung = Poly3DCollection(verts_lung[faces_lung], alpha=0.1)
