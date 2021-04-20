@@ -4,6 +4,9 @@ import glob
 import pickle
 from os.path import isfile
 
+from sklearn.cluster import DBSCAN
+from vedo import load, show
+
 from mp import process, process_2
 from mp_plot import mp_plot, mp_plot_2
 from mp_slice_plot import mp_slice_plot_2, mp_slice_plot
@@ -33,6 +36,7 @@ def predict(args):
 
 
 if __name__ == "__main__":
+    vtk_dir = 'vtk_dir'
     ct_ggo_dir = 'ct_ggo_dir'
     ct_con_dir = 'ct_con_dir'
     ct_fib_dir = 'ct_fib_dir'
@@ -41,29 +45,51 @@ if __name__ == "__main__":
 
     if os.path.exists('points.pkl'):
         with open('points.pkl', 'rb') as f:
-            type_map = dict()
             rs = pickle.load(f)
-            # mp_slice_plot(rs)
+            data = list()
+            type_map = dict()
+
             for r in rs:
                 for af in r[8]:
                     x = int(math.floor(af[0][0]))
                     y = int(math.floor(af[0][1]))
                     z = int(math.floor(af[0][2]))
                     v = af[1]
-                    type_map[z] = (v, (x, y, z))
+                    type_map[(x, y, z)] = v
+                    data.append([x, y, z])
 
-        if os.path.exists(ct_ggo_dir) is False and \
-           os.path.exists(ct_con_dir) is False and \
-           os.path.exists(ct_fib_dir) is False:
+            db = DBSCAN(eps=32, min_samples=4).fit(data)
+            labels = db.labels_
+            components = db.components_
+            num_of_clusters = set(labels)
+            print(len(num_of_clusters))
+            clusters = dict()
+            for label, point in zip(labels, components):
+                if clusters.get(label) is None:
+                    clusters[label] = [point]
+                else:
+                    clusters.get(label).append(point)
 
-            os.makedirs(ct_ggo_dir)
-            os.makedirs(ct_con_dir)
-            os.makedirs(ct_fib_dir)
+    if os.path.exists(ct_ggo_dir) is False and \
+       os.path.exists(ct_con_dir) is False and \
+       os.path.exists(ct_fib_dir) is False and \
+       os.path.exists(vtk_dir) is False:
+        os.makedirs(vtk_dir)
+        os.makedirs(ct_ggo_dir)
+        os.makedirs(ct_con_dir)
+        os.makedirs(ct_fib_dir)
 
-            mp_plot(study_instance_id, rs, type_map, ct_ggo_dir, ct_con_dir, ct_fib_dir)
+        mp_plot(study_instance_id,
+                rs,
+                type_map,
+                ct_ggo_dir,
+                ct_con_dir,
+                ct_fib_dir,
+                vtk_dir,
+                clusters)
 
-            # g = load(ct_ggo_dir)
-            # show(g)
+        g = load(vtk_dir)
+        show(g)
     else:
         test_sids = ['1.2.826.0.1.3680043.8.1678.101.10637216566590543417.794673']
         for sid in test_sids:

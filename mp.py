@@ -12,7 +12,7 @@ def worker(inp):
     ct_instance = inp[1]
     total_number_of_instances = inp[2]
     percent = read_progress(study_instance_id)
-    new_percent = str(round(float(float(percent) + 30.0/float(total_number_of_instances)), 2))
+    new_percent = str(round(float(float(percent) + 29.0/float(total_number_of_instances)), 2))
     write_progress(study_instance_id, new_percent)
     meta_data_dicom = pydicom.dcmread(ct_instance)
     ct_slice = CTSlice(meta_data_dicom)

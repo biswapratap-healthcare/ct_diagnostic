@@ -6,9 +6,12 @@ import pickle
 import shutil
 import tempfile
 from zipfile import ZipFile
+
+from sklearn.cluster import DBSCAN
+from vedo import load, show, screenshot
 from werkzeug.utils import secure_filename
 
-from common import ERROR_FILE
+from common import ERROR_FILE, BOX_SIZE
 from driver2 import three_d_plot
 from mp import process, process_2
 from mp_plot import mp_plot, mp_plot_2
@@ -85,10 +88,12 @@ def process_ct_instances(study_instance_id, ct_instances, work_dir, output_dir):
         final_json_str = json.dumps(final_json, indent=4)
         f.write(final_json_str)
 
-    type_map = dict()
     mp_slice_plot_2(rs, output_dir)
 
     write_progress(output_dir, "60")
+
+    data = list()
+    type_map = dict()
     
     for r in rs:
         for af in r[8]:
@@ -96,23 +101,54 @@ def process_ct_instances(study_instance_id, ct_instances, work_dir, output_dir):
             y = int(math.floor(af[0][1]))
             z = int(math.floor(af[0][2]))
             v = af[1]
-            type_map[z] = (v, (x, y, z))
+            type_map[(x, y, z)] = v
+            data.append([x, y, z])
 
+    db = DBSCAN(eps=5, min_samples=4).fit(data)
+    labels = db.labels_
+    components = db.components_
+    num_of_clusters = set(labels)
+    print(len(num_of_clusters))
+    clusters = dict()
+    for label, point in zip(labels, components):
+        if clusters.get(label) is None:
+            clusters[label] = [point]
+        else:
+            clusters.get(label).append(point)
+
+    vtk_dir = tempfile.mkdtemp()
     ct_ggo_dir = tempfile.mkdtemp()
     ct_con_dir = tempfile.mkdtemp()
     ct_fib_dir = tempfile.mkdtemp()
 
-    mp_plot(study_instance_id, rs, type_map, ct_ggo_dir, ct_con_dir, ct_fib_dir)
+    from datetime import datetime
+
+    now = datetime.now()
+    current_time = now.strftime("%H:%M:%S")
+    print("Start Time =", current_time)
+
+    mp_plot(study_instance_id, rs, type_map, ct_ggo_dir, ct_con_dir, ct_fib_dir, vtk_dir, clusters)
+
+    now = datetime.now()
+    current_time = now.strftime("%H:%M:%S")
+    print("End Time =", current_time)
 
     write_progress(output_dir, "80")
 
-    three_d_plot(work_dir, output_dir, ct_ggo_dir, ct_con_dir, ct_fib_dir)
+    vtk_plot(vtk_dir, output_dir)
+    # three_d_plot(work_dir, output_dir, ct_ggo_dir, ct_con_dir, ct_fib_dir)
 
     shutil.rmtree(ct_ggo_dir)
     shutil.rmtree(ct_con_dir)
     shutil.rmtree(ct_fib_dir)
 
     write_progress(output_dir, "90")
+
+
+def vtk_plot(work_dir, output_dir):
+    volume = load(work_dir)
+    show(volume)
+    screenshot(filename=output_dir + '/vtk.png')
 
 
 def predict(study_instance_id, work_dir, output_dir):

@@ -67,7 +67,26 @@ class CTSlice:
                     labels, confidences = box.get_label()
                     center_x, center_y = box.get_center()
                     if labels[0] != LABEL_NORMAL:
-                        self.affected_boxes.append((labels[0], confidences[0], [center_x, center_y, self.__pos_z]))
+                        self.affected_boxes.append((labels[0],
+                                                    confidences[0],
+                                                    [center_x - int(BOX_SIZE/2),
+                                                     center_y - int(BOX_SIZE/2),
+                                                     self.__pos_z]))
+                        self.affected_boxes.append((labels[0],
+                                                    confidences[0],
+                                                    [center_x - int(BOX_SIZE/2),
+                                                     center_y + int(BOX_SIZE/2),
+                                                     self.__pos_z]))
+                        self.affected_boxes.append((labels[0],
+                                                    confidences[0],
+                                                    [center_x + int(BOX_SIZE/2),
+                                                     center_y - int(BOX_SIZE/2),
+                                                     self.__pos_z]))
+                        self.affected_boxes.append((labels[0],
+                                                    confidences[0],
+                                                    [center_x + int(BOX_SIZE/2),
+                                                     center_y + int(BOX_SIZE/2),
+                                                     self.__pos_z]))
         else:
             self.__is_valid = False
 

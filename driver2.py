@@ -142,18 +142,26 @@ def plot_3d(p_segmented_lungs,
     ax.set_xlim(0, p_segmented_lungs_t.shape[0])
     ax.set_ylim(0, p_segmented_lungs_t.shape[1])
     ax.set_zlim(0, p_segmented_lungs_t.shape[2])
+    plt.axis('off')
+    plt.grid(b=None)
     plt.savefig(output_dir + '/natural.png', bbox_inches='tight')
     write_progress(output_dir, "82")
     ax.view_init(90, 0)
     plt.draw()
+    plt.axis('off')
+    plt.grid(b=None)
     plt.savefig(output_dir + '/top.png', bbox_inches='tight')
     write_progress(output_dir, "84")
     ax.view_init(0, 180)
     plt.draw()
+    plt.axis('off')
+    plt.grid(b=None)
     plt.savefig(output_dir + '/lateral.png', bbox_inches='tight')
     write_progress(output_dir, "86")
     ax.view_init(0, 270)
     plt.draw()
+    plt.axis('off')
+    plt.grid(b=None)
     plt.savefig(output_dir + '/front.png', bbox_inches='tight')
     write_progress(output_dir, "88")
 
@@ -194,4 +202,4 @@ def three_d_plot(sid_dir, output_dir, ggo_dir, con_dir, fib_dir):
     if min_fib_v == max_fib_v == 0.0:
         fib_images[0][0][0] = 3300
 
-    plot_3d(segmented_lungs, output_dir, ggo_images, con_images, fib_images, -600, 100)
+    plot_3d(segmented_lungs, output_dir, ggo_images, con_images, fib_images, -100, 100)
