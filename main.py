@@ -13,24 +13,24 @@ from mp_slice_plot import mp_slice_plot_2, mp_slice_plot
 from utils import get_instance_files
 
 
-def process_ct_instances(ct_instances):
-    rets_list = process(ct_instances)
+def process_ct_instances(study_instance_idd, ct_instances):
+    rets_list = process(study_instance_idd, ct_instances)
     with open('points.pkl', 'wb') as fp:
         pickle.dump(rets_list, fp)
     return ""
 
 
 def predict(args):
-    study_instance_id = args['study_instance_id']
+    study_instance_idd = args['study_instance_id']
     print(f"Received request for {study_instance_id}")
     src_path = os.path.dirname(os.path.abspath(__file__))
-    ct_dir = src_path + '/../ai_ct_diagnostic_trainer/studies/' + str(study_instance_id) + '/'
+    ct_dir = src_path + '/../Studies/' + str(study_instance_id) + '/'
     files = glob.glob(ct_dir + '/**/*', recursive=True)
     instance_files = [file for file in files if isfile(file)]
     ct_instances = get_instance_files(instance_files)
     if len(ct_instances) == 0:
         return {'error': 'No valid CT instances found !!'}
-    final_json = process_ct_instances(ct_instances)
+    final_json = process_ct_instances(study_instance_idd, ct_instances)
     print(f"Finished request for {study_instance_id}")
     return final_json
 
@@ -41,12 +41,15 @@ if __name__ == "__main__":
     ct_con_dir = 'ct_con_dir'
     ct_fib_dir = 'ct_fib_dir'
 
-    study_instance_id = "1.2.826.0.1.3680043.8.1678.101.10637213214991521358.314450"
+    # g = load(vtk_dir)
+    # show(g)
+    # exit(0)
+
+    study_instance_id = "1.2.826.0.1.3680043.8.1678.101.10637203703447639663.147272"
 
     if os.path.exists('points.pkl'):
         with open('points.pkl', 'rb') as f:
             rs = pickle.load(f)
-            data = list()
             type_map = dict()
 
             for r in rs:
@@ -55,20 +58,12 @@ if __name__ == "__main__":
                     y = int(math.floor(af[0][1]))
                     z = int(math.floor(af[0][2]))
                     v = af[1]
-                    type_map[(x, y, z)] = v
-                    data.append([x, y, z])
-
-            db = DBSCAN(eps=32, min_samples=4).fit(data)
-            labels = db.labels_
-            components = db.components_
-            num_of_clusters = set(labels)
-            print(len(num_of_clusters))
-            clusters = dict()
-            for label, point in zip(labels, components):
-                if clusters.get(label) is None:
-                    clusters[label] = [point]
-                else:
-                    clusters.get(label).append(point)
+                    type_map[z] = (v, (x, y, z))
+    else:
+        test_sid = '1.2.826.0.1.3680043.8.1678.101.10637203703447639663.147272'
+        param = dict()
+        param['study_instance_id'] = test_sid
+        fin_json_dict = predict(param)
 
     if os.path.exists(ct_ggo_dir) is False and \
        os.path.exists(ct_con_dir) is False and \
@@ -85,18 +80,7 @@ if __name__ == "__main__":
                 ct_ggo_dir,
                 ct_con_dir,
                 ct_fib_dir,
-                vtk_dir,
-                clusters)
+                vtk_dir)
 
         g = load(vtk_dir)
         show(g)
-    else:
-        test_sids = ['1.2.826.0.1.3680043.8.1678.101.10637216566590543417.794673']
-        for sid in test_sids:
-            try:
-                param = dict()
-                param['study_instance_id'] = sid
-                fin_json_dict = predict(param)
-            except Exception as e:
-                print(str(e))
-                continue
