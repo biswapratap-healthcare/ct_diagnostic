@@ -21,7 +21,7 @@ class CTSlice:
         self.ril_normal_count = 0.0
         self.ril_abnormal_count = 0.0
 
-        self.affected_boxes = list()
+        self.affected_pixels = list()
 
         self.__sop_instance_uid = meta_data_dicom.SOPInstanceUID
         self.__series_instance_uid = meta_data_dicom.SeriesInstanceUID
@@ -65,28 +65,15 @@ class CTSlice:
                 self.__is_valid = True
                 for box in self.__boxes:
                     labels, confidences = box.get_label()
-                    center_x, center_y = box.get_center()
-                    if labels[0] != LABEL_NORMAL:
-                        self.affected_boxes.append((labels[0],
-                                                    confidences[0],
-                                                    [center_x - int(BOX_SIZE/2),
-                                                     center_y - int(BOX_SIZE/2),
-                                                     self.__pos_z]))
-                        self.affected_boxes.append((labels[0],
-                                                    confidences[0],
-                                                    [center_x - int(BOX_SIZE/2),
-                                                     center_y + int(BOX_SIZE/2),
-                                                     self.__pos_z]))
-                        self.affected_boxes.append((labels[0],
-                                                    confidences[0],
-                                                    [center_x + int(BOX_SIZE/2),
-                                                     center_y - int(BOX_SIZE/2),
-                                                     self.__pos_z]))
-                        self.affected_boxes.append((labels[0],
-                                                    confidences[0],
-                                                    [center_x + int(BOX_SIZE/2),
-                                                     center_y + int(BOX_SIZE/2),
-                                                     self.__pos_z]))
+                    if labels[0] != LABEL_NORMAL and int(confidences[0]) == int(100.00):
+                        lung_pixels = box.get_lung_pixels()
+                        for lung_pixel in lung_pixels:
+                            x_idx = lung_pixel[0]
+                            y_idx = lung_pixel[1]
+                            z_idx = self.__pos_z
+                            self.affected_pixels.append((labels[0],
+                                                         confidences[0],
+                                                         [x_idx, y_idx, z_idx]))
         else:
             self.__is_valid = False
 
@@ -123,6 +110,7 @@ class CTSlice:
                         yy = self.__pos_y + y + iy
 
                         if self.__segmented_pixel_array[x + ix, y + iy] == 255:
+                            box.set_a_lung_pixel(x + ix, y + iy)
                             x_mod = xx - self.__min_x
                             y_mod = yy - self.__min_y
                             min_x_mod = 0
@@ -197,11 +185,11 @@ class CTSlice:
 
         affected_points = list()
 
-        for affected_box in self.affected_boxes:
-            label = affected_box[0]
-            confidence = affected_box[1]
+        for affected_pixel in self.affected_pixels:
+            label = affected_pixel[0]
+            confidence = affected_pixel[1]
             if int(confidence) == int(100.0):
-                affected_points.append((affected_box[2], label))
+                affected_points.append((affected_pixel[2], label))
             if label == LABEL_GROUND_GLASS_OPACITY and confidence > 90.0:
                 num_of_ggo += 1
             elif label == LABEL_CONSOLIDATION and confidence > 90.0:

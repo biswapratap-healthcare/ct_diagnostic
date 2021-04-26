@@ -44,7 +44,7 @@ def assemble_report(out_dir):
     two_d_slices = glob.glob(out_dir + '/**/*.jpg', recursive=True)
 
     delta = 3
-    for idx in range(0, len(two_d_slices), 4):
+    for idx in range(0, len(two_d_slices) - 4, 4):
         pdf.add_page()
         pdf.set_font('Times', 'B', 12.0)
         pdf.cell(epw, 0.0, '2D Analysis of Slices : ' +

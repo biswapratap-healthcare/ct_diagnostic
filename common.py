@@ -1,6 +1,7 @@
 MAX_WIDTH = 512
 MAX_HEIGHT = 512
 BOX_SIZE = 32
+RANDOM_RANGE = 7
 PR_TEMPLATE_FILE = 'pr_template.json'
 
 LABEL_GROUND_GLASS_OPACITY = 'Ground glass opacity'

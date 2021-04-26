@@ -22,6 +22,13 @@ class Box:
         self.__feature_array = None
         self.__labels = list()
         self.__confidences = list()
+        self.__lung_pixels = list()
+
+    def set_a_lung_pixel(self, x, y):
+        self.__lung_pixels.append([x, y])
+
+    def get_lung_pixels(self):
+        return self.__lung_pixels
 
     def get_pixel_array(self):
         return self.__pixel_array

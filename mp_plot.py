@@ -1,12 +1,11 @@
 import copy
 import math
 import os
-import random
 
 import pydicom
 import concurrent.futures
 
-from common import BOX_SIZE, LABEL_GROUND_GLASS_OPACITY, LABEL_CONSOLIDATION, LABEL_FIBROSIS
+from common import LABEL_GROUND_GLASS_OPACITY, LABEL_CONSOLIDATION, LABEL_FIBROSIS
 from datetime import timezone
 import datetime
 
@@ -38,40 +37,39 @@ def worker_plot(inp):
 
     z = int(math.floor(float(meta_data_dicom.ImagePositionPatient[2])))
 
-    # percent = read_progress(study_instance_id)
-    # new_percent = str(round(float(float(percent) + 20.0 / float(total_number_of_instances)), 2))
-    # write_progress(study_instance_id, new_percent)
+    percent = read_progress(study_instance_id)
+    new_percent = str(round(float(float(percent) + 19.0 / float(total_number_of_instances)), 2))
+    write_progress(study_instance_id, new_percent)
 
     if type_map.get(z) is not None:
-        value = type_map.get(z)
-        affected_type = value[0]
-        center_point = value[1]
-        x_val = center_point[0]
-        y_val = center_point[1]
-        for x in range(x_val - int(BOX_SIZE/2) + int(random.randrange(-10, 10)), x_val + int(BOX_SIZE/2) + int(random.randrange(-10, 10)), 1):
-            for y in range(y_val - int(BOX_SIZE/2) + int(random.randrange(-10, 10)), y_val + int(BOX_SIZE/2) + int(random.randrange(-10, 10)), 1):
-                if affected_type.lower() == LABEL_GROUND_GLASS_OPACITY.lower():
-                    meta_data_dicom_ggo.pixel_array[x][y] = 3500
-                    meta_data_dicom_vtk.pixel_array[x][y] = 3000
-                    meta_data_dicom_con.pixel_array[x][y] = 0
-                    meta_data_dicom_fib.pixel_array[x][y] = 0
-                elif affected_type.lower() == LABEL_CONSOLIDATION.lower():
-                    print("Found Consolidation")
-                    meta_data_dicom_ggo.pixel_array[x][y] = 0
-                    meta_data_dicom_con.pixel_array[x][y] = 3400
-                    meta_data_dicom_vtk.pixel_array[x][y] = 2000
-                    meta_data_dicom_fib.pixel_array[x][y] = 0
-                elif affected_type.lower() == LABEL_FIBROSIS.lower():
-                    print("Found Fibrosis")
-                    meta_data_dicom_ggo.pixel_array[x][y] = 0
-                    meta_data_dicom_con.pixel_array[x][y] = 0
-                    meta_data_dicom_fib.pixel_array[x][y] = 3300
-                    meta_data_dicom_vtk.pixel_array[x][y] = 1000
-                else:
-                    meta_data_dicom_ggo.pixel_array[x][y] = 0
-                    meta_data_dicom_con.pixel_array[x][y] = 0
-                    meta_data_dicom_fib.pixel_array[x][y] = 0
-                    meta_data_dicom_vtk.pixel_array[x][y] = 0
+        values = type_map.get(z)
+        for value in values:
+            affected_type = value[0]
+            point = value[1]
+            x = point[0]
+            y = point[1]
+            if affected_type.lower() == LABEL_GROUND_GLASS_OPACITY.lower():
+                meta_data_dicom_ggo.pixel_array[x][y] = 3500
+                meta_data_dicom_vtk.pixel_array[x][y] = 3000
+                meta_data_dicom_con.pixel_array[x][y] = 0
+                meta_data_dicom_fib.pixel_array[x][y] = 0
+            elif affected_type.lower() == LABEL_CONSOLIDATION.lower():
+                print("Found Consolidation")
+                meta_data_dicom_ggo.pixel_array[x][y] = 0
+                meta_data_dicom_con.pixel_array[x][y] = 3400
+                meta_data_dicom_vtk.pixel_array[x][y] = 2000
+                meta_data_dicom_fib.pixel_array[x][y] = 0
+            elif affected_type.lower() == LABEL_FIBROSIS.lower():
+                print("Found Fibrosis")
+                meta_data_dicom_ggo.pixel_array[x][y] = 0
+                meta_data_dicom_con.pixel_array[x][y] = 0
+                meta_data_dicom_fib.pixel_array[x][y] = 3300
+                meta_data_dicom_vtk.pixel_array[x][y] = 1000
+            else:
+                meta_data_dicom_ggo.pixel_array[x][y] = 0
+                meta_data_dicom_con.pixel_array[x][y] = 0
+                meta_data_dicom_fib.pixel_array[x][y] = 0
+                meta_data_dicom_vtk.pixel_array[x][y] = 0
 
     meta_data_dicom_vtk.PixelData = meta_data_dicom_vtk.pixel_array.tobytes()
     dt = datetime.datetime.now(timezone.utc)

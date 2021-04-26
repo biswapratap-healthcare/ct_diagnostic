@@ -33,7 +33,6 @@ def process_ct_instances(study_instance_id, ct_instances, work_dir, output_dir):
     abnormal_slice_count = 0
 
     total_number_of_slices = len(ct_instances)
-
     write_progress(study_instance_id, "20")
 
     if os.path.exists('points.pkl'):
@@ -89,9 +88,7 @@ def process_ct_instances(study_instance_id, ct_instances, work_dir, output_dir):
         f.write(final_json_str)
 
     mp_slice_plot_2(rs, output_dir)
-
     write_progress(output_dir, "60")
-
     type_map = dict()
 
     for r in rs:
@@ -100,18 +97,15 @@ def process_ct_instances(study_instance_id, ct_instances, work_dir, output_dir):
             y = int(math.floor(af[0][1]))
             z = int(math.floor(af[0][2]))
             v = af[1]
-            type_map[z] = (v, (x, y, z))
+            if type_map.get(z) is None:
+                type_map[z] = [(v, (x, y, z))]
+            else:
+                type_map.get(z).append((v, (x, y, z)))
 
     vtk_dir = tempfile.mkdtemp()
     ct_ggo_dir = tempfile.mkdtemp()
     ct_con_dir = tempfile.mkdtemp()
     ct_fib_dir = tempfile.mkdtemp()
-
-    from datetime import datetime
-
-    now = datetime.now()
-    current_time = now.strftime("%H:%M:%S")
-    print("Start Time =", current_time)
 
     mp_plot(study_instance_id,
             rs,
@@ -121,13 +115,9 @@ def process_ct_instances(study_instance_id, ct_instances, work_dir, output_dir):
             ct_fib_dir,
             vtk_dir)
 
-    now = datetime.now()
-    current_time = now.strftime("%H:%M:%S")
-    print("End Time =", current_time)
-
     write_progress(output_dir, "80")
 
-    vtk_plot(vtk_dir, output_dir)
+    # vtk_plot(vtk_dir, output_dir)
     three_d_plot(work_dir, output_dir, ct_ggo_dir, ct_con_dir, ct_fib_dir)
 
     shutil.rmtree(ct_ggo_dir)

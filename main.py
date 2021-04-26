@@ -5,7 +5,7 @@ import pickle
 from os.path import isfile
 
 from sklearn.cluster import DBSCAN
-from vedo import load, show
+from vedo import load, show, screenshot, Video, exportWindow
 
 from mp import process, process_2
 from mp_plot import mp_plot, mp_plot_2
@@ -58,12 +58,16 @@ if __name__ == "__main__":
                     y = int(math.floor(af[0][1]))
                     z = int(math.floor(af[0][2]))
                     v = af[1]
-                    type_map[z] = (v, (x, y, z))
+                    if type_map.get(z) is None:
+                        type_map[z] = [(v, (x, y, z))]
+                    else:
+                        type_map.get(z).append((v, (x, y, z)))
     else:
         test_sid = '1.2.826.0.1.3680043.8.1678.101.10637203703447639663.147272'
         param = dict()
         param['study_instance_id'] = test_sid
         fin_json_dict = predict(param)
+        exit(0)
 
     if os.path.exists(ct_ggo_dir) is False and \
        os.path.exists(ct_con_dir) is False and \

@@ -31,7 +31,7 @@ def load_scans_2(folder):
 
 def load_scans(sid):
     src_path = os.path.dirname(os.path.abspath(__file__))
-    ct_dir = src_path + '/../ai_ct_diagnostic_trainer/studies/' + str(sid) + '/'
+    ct_dir = src_path + '/../studies/' + str(sid) + '/'
     files = glob.glob(ct_dir + '/**/*', recursive=True)
     instance_files = [file for file in files if isfile(file)]
     ct_instance_files = get_instance_files(instance_files)
@@ -73,12 +73,10 @@ def segment_lung_mask(image):
         bad_labels = np.unique([labels[0, :], labels[-1, :], labels[:, 0], labels[:, -1]])
         for bad_label in bad_labels:
             binary_image[labels == bad_label] = 2
-        # We have a lot of remaining small signals outside of the lungs that need to be removed.
-        # In our competition closing is superior to fill_lungs
         selem = disk(2)
         binary_image = opening(binary_image, selem)
-        binary_image -= 1  # Make the image actual binary
-        binary_image = 1 - binary_image  # Invert it, lungs are now 1
+        binary_image -= 1
+        binary_image = 1 - binary_image
         segmented[n] = binary_image.copy() * image[n]
     return segmented
 
@@ -166,9 +164,20 @@ def plot_3d(p_segmented_lungs,
     write_progress(output_dir, "88")
 
 
+# fib_dir = 'ct_fib_dir'
+# con_dir = 'ct_con_dir'
+# ggo_dir = 'ct_ggo_dir'
+# output_dir = 'output'
+# sid_id = '1.2.826.0.1.3680043.8.1678.101.10637203703447639663.147272'
+
 # if __name__ == "__main__":
 def three_d_plot(sid_dir, output_dir, ggo_dir, con_dir, fib_dir):
     scans_lung = load_scans_2(sid_dir)
+
+    # if os.path.exists(output_dir) is False:
+    #     os.makedirs(output_dir)
+    # scans_lung = load_scans(sid_id)
+
     hu_scans_lung = transform_to_hu(scans_lung)
     segmented_lungs = segment_lung_mask(hu_scans_lung)
 
