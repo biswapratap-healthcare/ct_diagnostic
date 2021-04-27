@@ -5,7 +5,7 @@ import pickle
 from os.path import isfile
 
 from sklearn.cluster import DBSCAN
-from vedo import load, show, screenshot, Video, exportWindow
+from vedo import load, show, write
 
 from mp import process, process_2
 from mp_plot import mp_plot, mp_plot_2
@@ -41,9 +41,9 @@ if __name__ == "__main__":
     ct_con_dir = 'ct_con_dir'
     ct_fib_dir = 'ct_fib_dir'
 
-    # g = load(vtk_dir)
-    # show(g)
-    # exit(0)
+    g = load(vtk_dir)
+    write(objct=g, fileoutput="out.vtp")
+    exit(0)
 
     study_instance_id = "1.2.826.0.1.3680043.8.1678.101.10637203703447639663.147272"
 
