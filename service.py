@@ -143,7 +143,6 @@ def create_app():
                 job_id = args['job_id']
                 zip_folder = zipfile.ZipFile('result.zip', 'w', compression=zipfile.ZIP_STORED)
                 for file in os.listdir(job_id):
-                    print(file)
                     zip_folder.write(job_id + '/' + file)
                 zip_folder.close()
 
