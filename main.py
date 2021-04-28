@@ -4,7 +4,6 @@ import glob
 import pickle
 from os.path import isfile
 
-from sklearn.cluster import DBSCAN
 from vedo import load, show, write
 
 from mp import process, process_2
@@ -42,7 +41,7 @@ if __name__ == "__main__":
     ct_fib_dir = 'ct_fib_dir'
 
     g = load(vtk_dir)
-    write(objct=g, fileoutput="out.vtp")
+    write(objct=g, fileoutput="out.vti")
     exit(0)
 
     study_instance_id = "1.2.826.0.1.3680043.8.1678.101.10637203703447639663.147272"

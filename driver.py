@@ -5,19 +5,16 @@ import glob
 import pickle
 import shutil
 import tempfile
-from zipfile import ZipFile
 
-from sklearn.cluster import DBSCAN
-from vedo import load, show, screenshot
+from vedo import load, write
 from werkzeug.utils import secure_filename
 
-from common import ERROR_FILE, BOX_SIZE
+from common import ERROR_FILE
 from driver2 import three_d_plot
 from mp import process, process_2
 from mp_plot import mp_plot, mp_plot_2
 from mp_slice_plot import mp_slice_plot_2, mp_slice_plot
 
-from report_assembler import assemble_report
 from utils import get_25_score, create_json, write_progress
 
 
@@ -117,20 +114,20 @@ def process_ct_instances(study_instance_id, ct_instances, work_dir, output_dir):
 
     write_progress(output_dir, "80")
 
-    # vtk_plot(vtk_dir, output_dir)
+    vtk_plot(vtk_dir, output_dir)
     three_d_plot(work_dir, output_dir, ct_ggo_dir, ct_con_dir, ct_fib_dir)
 
     shutil.rmtree(ct_ggo_dir)
     shutil.rmtree(ct_con_dir)
     shutil.rmtree(ct_fib_dir)
+    shutil.rmtree(vtk_dir)
 
     write_progress(output_dir, "90")
 
 
-def vtk_plot(work_dir, output_dir):
-    volume = load(work_dir)
-    show(volume)
-    screenshot(filename=output_dir + '/vtk.png')
+def vtk_plot(vtk_dir, output_dir):
+    vtk_obj = load(vtk_dir)
+    write(objct=vtk_obj, fileoutput=output_dir + "/vtk_obj.vti")
 
 
 def predict(study_instance_id, work_dir, output_dir):
@@ -161,7 +158,7 @@ def generate_report(study_instance_id, work_dir, output_dir):
     try:
         execute(study_instance_id, work_dir, output_dir)
         shutil.rmtree(work_dir)
-        assemble_report(output_dir)
+        # assemble_report(output_dir)
         write_progress(output_dir, "100")
     except Exception as e:
         if os.path.exists(output_dir) is False:

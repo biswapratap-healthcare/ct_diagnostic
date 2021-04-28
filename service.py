@@ -2,6 +2,7 @@ import os
 import shutil
 import tempfile
 import threading
+import zipfile
 from zipfile import ZipFile
 
 from waitress import serve
@@ -121,6 +122,35 @@ def create_app():
                 rv = dict()
                 rv['percent'] = percent
                 return rv, 200
+            except Exception as e:
+                rv = dict()
+                rv['status'] = str(e)
+                return rv, 404
+
+    get_report_parser = reqparse.RequestParser()
+    get_report_parser.add_argument('job_id',
+                                   type=str,
+                                   help='job_id',
+                                   required=True)
+
+    @api.route('/get_report')
+    @api.expect(get_report_parser)
+    class GetReportService(Resource):
+        @api.expect(get_report_parser)
+        def get(self):
+            try:
+                args = get_report_parser.parse_args()
+                job_id = args['job_id']
+                zip_folder = zipfile.ZipFile('result.zip', 'w', compression=zipfile.ZIP_STORED)
+                for file in os.listdir(job_id):
+                    print(file)
+                    zip_folder.write(job_id + '/' + file)
+                zip_folder.close()
+
+                return send_file('result.zip',
+                                 mimetype='zip',
+                                 attachment_filename='result.zip',
+                                 as_attachment=True)
             except Exception as e:
                 rv = dict()
                 rv['status'] = str(e)
