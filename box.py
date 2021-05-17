@@ -1,3 +1,6 @@
+import time
+
+import cv2
 import numpy as np
 from common import BOX_SIZE, LABEL_NORMAL
 from feature import FeatureExtractor
@@ -35,10 +38,11 @@ class Box:
 
     def set_pixel_array_value_at(self, x, y, ix, iy, v):
         self.__pixel_array[ix, iy, 0] = v
-        self.__pixel_array[ix, iy, 1] = x + ix
-        self.__pixel_array[ix, iy, 2] = y + iy
+        # self.__pixel_array[ix, iy, 1] = x + ix
+        # self.__pixel_array[ix, iy, 2] = y + iy
 
     def set_feature_array(self):
+        self.__pixel_array = cv2.cvtColor(self.__pixel_array, cv2.COLOR_GRAY2RGB)
         fa = fe.get_features(self.__pixel_array)
         fa = [np.array(fa)]
         fa = np.array(fa)

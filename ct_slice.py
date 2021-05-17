@@ -1,3 +1,6 @@
+import time
+
+import cv2
 import numpy as np
 
 from box import Box
@@ -95,7 +98,7 @@ class CTSlice:
 
                 count = 0.0
                 total_count = 0.0
-                box_zero = np.zeros((BOX_SIZE, BOX_SIZE, 3), dtype=np.uint8)
+                box_zero = np.zeros((BOX_SIZE, BOX_SIZE, 1), dtype=np.uint8)
                 box = Box(top_left_coord=(x, y),
                           top_right_coord=(x, y + BOX_SIZE),
                           bottom_right_coord=(x + BOX_SIZE, y + BOX_SIZE),
@@ -137,6 +140,8 @@ class CTSlice:
                     boxes.append(box)
 
                     if box.is_affected():
+                        # file_path = 'abnormal_images/' + str(int(round(time.time() * 1000))) + '.png'
+                        # cv2.imwrite(file_path, box.get_pixel_array())
                         for lobe in lobes:
                             if lobe == 'lsl':
                                 self.lsl_abnormal_count += 0.00001
@@ -149,6 +154,8 @@ class CTSlice:
                             else:
                                 self.ril_abnormal_count += 0.00001
                     else:
+                        # file_path = 'normal_images/' + str(int(round(time.time() * 1000))) + '.png'
+                        # cv2.imwrite(file_path, box.get_pixel_array())
                         for lobe in lobes:
                             if lobe == 'lsl':
                                 self.lsl_normal_count += 0.00001
