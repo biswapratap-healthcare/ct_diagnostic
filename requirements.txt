@@ -15,4 +15,5 @@ flask-restplus==0.13.0
 Werkzeug==0.16.1
 waitress==2.0.0
 fpdf==1.7.2
-vedo
+vedo~=2021.0.2
+requests~=2.25.1

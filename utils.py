@@ -8,6 +8,7 @@ from numpy import ones, vstack
 from numpy.linalg import lstsq
 
 from common import MAX_HEIGHT, MAX_WIDTH
+from rest_client import update_in_progress_state, update_progress_percent
 from segmentation import get_segmented_lungs
 
 
@@ -310,6 +311,11 @@ def read_progress(job_id):
 def write_progress(job_id, percent):
     mutex.acquire()
     try:
+        if percent == "5":
+            update_in_progress_state(job_id, 'TRUE')
+        if percent == "100":
+            update_in_progress_state(job_id, 'FALSE')
+        update_progress_percent(job_id, percent)
         with open(job_id + '/progress.txt', "w") as f:
             f.write(percent)
     finally:

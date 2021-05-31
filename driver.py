@@ -5,6 +5,7 @@ import glob
 import pickle
 import shutil
 import tempfile
+import zipfile
 
 from vedo import load, write
 from werkzeug.utils import secure_filename
@@ -14,6 +15,7 @@ from driver2 import three_d_plot
 from mp import process, process_2
 from mp_plot import mp_plot, mp_plot_2
 from mp_slice_plot import mp_slice_plot_2, mp_slice_plot
+from rest_client import update_in_progress_state, save_result
 
 from utils import get_25_score, create_json, write_progress
 
@@ -141,6 +143,7 @@ def execute(study_instance_id, work_dir, output_dir):
     except Exception as e:
         with open(output_dir + '/' + ERROR_FILE, "a+") as f:
             f.write(str(e))
+        update_in_progress_state(study_instance_id, 'FALSE')
 
 
 def store_and_verify_file(file_from_request, work_dir):
@@ -160,8 +163,14 @@ def generate_report(study_instance_id, work_dir, output_dir):
         shutil.rmtree(work_dir)
         # assemble_report(output_dir)
         write_progress(output_dir, "100")
+        zip_folder = zipfile.ZipFile('result.zip', 'w', compression=zipfile.ZIP_STORED)
+        for file in os.listdir(study_instance_id):
+            zip_folder.write(study_instance_id + '/' + file)
+        zip_folder.close()
+        save_result(study_instance_id, 'result.zip')
     except Exception as e:
         if os.path.exists(output_dir) is False:
             os.makedirs(output_dir)
         with open(output_dir + '/' + ERROR_FILE, "a+") as f:
             f.write(str(e))
+        update_in_progress_state(study_instance_id, 'FALSE')
