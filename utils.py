@@ -311,12 +311,12 @@ def read_progress(job_id):
 def write_progress(job_id, percent):
     mutex.acquire()
     try:
+        with open(job_id + '/progress.txt', "w") as f:
+            f.write(percent)
+    finally:
         if percent == "5":
             update_in_progress_state(job_id, 'TRUE')
         if percent == "100":
             update_in_progress_state(job_id, 'FALSE')
         update_progress_percent(job_id, percent)
-        with open(job_id + '/progress.txt', "w") as f:
-            f.write(percent)
-    finally:
         mutex.release()

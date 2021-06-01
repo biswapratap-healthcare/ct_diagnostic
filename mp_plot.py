@@ -38,8 +38,12 @@ def worker_plot(inp):
     z = int(math.floor(float(meta_data_dicom.ImagePositionPatient[2])))
 
     percent = read_progress(study_instance_id)
-    new_percent = str(round(float(float(percent) + 19.0 / float(total_number_of_instances)), 2))
-    write_progress(study_instance_id, new_percent)
+
+    if percent != '':
+        new_percent = str(round(float(float(percent) + 19.0 / float(total_number_of_instances)), 2))
+        write_progress(study_instance_id, new_percent)
+    else:
+        print("mp_plot: Got Empty Percentage")
 
     if type_map.get(z) is not None:
         values = type_map.get(z)
