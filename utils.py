@@ -294,6 +294,19 @@ def get_25_score(ct_slice_objects, sid):
 
 
 mutex = Lock()
+last_sent_mutex = Lock()
+
+
+def read_last_sent_progress(job_id):
+    last_sent_mutex.acquire()
+    try:
+        if os.path.exists(job_id + '/last_sent_progress.txt') is False:
+            return "Invalid Job ID"
+        with open(job_id + '/last_sent_progress.txt', "r") as f:
+            percent = f.read()
+        return percent
+    finally:
+        last_sent_mutex.release()
 
 
 def read_progress(job_id):
@@ -308,6 +321,15 @@ def read_progress(job_id):
         mutex.release()
 
 
+def write_last_sent_progress(job_id, percent):
+    last_sent_mutex.acquire()
+    try:
+        with open(job_id + '/last_sent_progress.txt', "w") as f:
+            f.write(percent)
+    finally:
+        last_sent_mutex.release()
+
+
 def write_progress(job_id, percent):
     mutex.acquire()
     try:
@@ -318,5 +340,4 @@ def write_progress(job_id, percent):
             update_in_progress_state(job_id, 'TRUE')
         if percent == "100":
             update_in_progress_state(job_id, 'FALSE')
-        update_progress_percent(job_id, percent)
         mutex.release()

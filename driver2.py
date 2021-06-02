@@ -9,6 +9,7 @@ from skimage import measure
 import matplotlib.pyplot as plt
 from skimage.morphology import disk, opening, closing
 
+from rest_client import update_progress_percent
 from utils import get_instance_files, write_progress
 
 CT_OFFSET = 1024
@@ -90,7 +91,8 @@ def set_manual_window(hu_image, custom_center, custom_width):
     return w_image
 
 
-def plot_3d(p_segmented_lungs,
+def plot_3d(study_instance_id,
+            p_segmented_lungs,
             output_dir,
             p_ggo_images,
             p_con_images,
@@ -144,24 +146,28 @@ def plot_3d(p_segmented_lungs,
     plt.grid(b=None)
     plt.savefig(output_dir + '/natural.png', bbox_inches='tight')
     write_progress(output_dir, "82")
+    update_progress_percent(study_instance_id, "82")
     ax.view_init(90, 0)
     plt.draw()
     plt.axis('off')
     plt.grid(b=None)
     plt.savefig(output_dir + '/top.png', bbox_inches='tight')
     write_progress(output_dir, "84")
+    update_progress_percent(study_instance_id, "84")
     ax.view_init(0, 180)
     plt.draw()
     plt.axis('off')
     plt.grid(b=None)
     plt.savefig(output_dir + '/lateral.png', bbox_inches='tight')
     write_progress(output_dir, "86")
+    update_progress_percent(study_instance_id, "86")
     ax.view_init(0, 270)
     plt.draw()
     plt.axis('off')
     plt.grid(b=None)
     plt.savefig(output_dir + '/front.png', bbox_inches='tight')
     write_progress(output_dir, "88")
+    update_progress_percent(study_instance_id, "88")
 
 
 # fib_dir = 'ct_fib_dir'
@@ -171,7 +177,7 @@ def plot_3d(p_segmented_lungs,
 # sid_id = '1.2.826.0.1.3680043.8.1678.101.10637203703447639663.147272'
 
 # if __name__ == "__main__":
-def three_d_plot(sid_dir, output_dir, ggo_dir, con_dir, fib_dir):
+def three_d_plot(study_instance_id, sid_dir, output_dir, ggo_dir, con_dir, fib_dir):
     scans_lung = load_scans_2(sid_dir)
 
     # if os.path.exists(output_dir) is False:
@@ -211,4 +217,4 @@ def three_d_plot(sid_dir, output_dir, ggo_dir, con_dir, fib_dir):
     if min_fib_v == max_fib_v == 0.0:
         fib_images[0][0][0] = 3300
 
-    plot_3d(segmented_lungs, output_dir, ggo_images, con_images, fib_images, -100, 100)
+    plot_3d(study_instance_id, segmented_lungs, output_dir, ggo_images, con_images, fib_images, -100, 100)

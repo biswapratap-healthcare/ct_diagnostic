@@ -14,6 +14,7 @@ from werkzeug.datastructures import FileStorage
 
 from driver import generate_report, store_and_verify_file
 from report_assembler import assemble_report
+from rest_client import update_progress_percent
 from utils import read_progress, write_progress
 
 
@@ -65,6 +66,7 @@ def create_app():
                         with ZipFile(file_path, 'r') as zipObj:
                             zipObj.extractall(work_dir)
                         write_progress(job_id, "10")
+                        update_progress_percent(study_instance_id, "10")
                         t = threading.Thread(target=generate_report, args=(study_instance_id, work_dir, output_dir))
                         t.start()
                         shutil.rmtree(file_dir)

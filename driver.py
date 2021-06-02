@@ -15,9 +15,9 @@ from driver2 import three_d_plot
 from mp import process, process_2
 from mp_plot import mp_plot, mp_plot_2
 from mp_slice_plot import mp_slice_plot_2, mp_slice_plot
-from rest_client import update_in_progress_state, save_result
+from rest_client import update_in_progress_state, save_result, update_progress_percent
 
-from utils import get_25_score, create_json, write_progress
+from utils import get_25_score, create_json, write_progress, write_last_sent_progress
 
 
 def process_ct_instances(study_instance_id, ct_instances, work_dir, output_dir):
@@ -33,6 +33,8 @@ def process_ct_instances(study_instance_id, ct_instances, work_dir, output_dir):
 
     total_number_of_slices = len(ct_instances)
     write_progress(study_instance_id, "20")
+    write_last_sent_progress(study_instance_id, "20")
+    update_progress_percent(study_instance_id, "20")
 
     if os.path.exists('points.pkl'):
         with open('points.pkl', 'rb') as f:
@@ -43,6 +45,7 @@ def process_ct_instances(study_instance_id, ct_instances, work_dir, output_dir):
             pickle.dump(rs, fp)
 
     write_progress(output_dir, "50")
+    update_progress_percent(study_instance_id, "50")
 
     for r in rs:
         ct_slice, ggo, con, sub, fib, ple, pne, nor, affected_points, meta_data_dicom = r
@@ -81,6 +84,7 @@ def process_ct_instances(study_instance_id, ct_instances, work_dir, output_dir):
                              total_number_of_slices)
 
     write_progress(output_dir, "55")
+    update_progress_percent(study_instance_id, "55")
 
     with open(output_dir + '/out.json', 'w') as f:
         final_json_str = json.dumps(final_json, indent=4)
@@ -88,6 +92,8 @@ def process_ct_instances(study_instance_id, ct_instances, work_dir, output_dir):
 
     mp_slice_plot_2(rs, output_dir)
     write_progress(output_dir, "60")
+    write_last_sent_progress(output_dir, "60")
+    update_progress_percent(study_instance_id, "60")
     type_map = dict()
 
     for r in rs:
@@ -115,9 +121,10 @@ def process_ct_instances(study_instance_id, ct_instances, work_dir, output_dir):
             vtk_dir)
 
     write_progress(output_dir, "80")
+    update_progress_percent(study_instance_id, "80")
 
     vtk_plot(vtk_dir, output_dir)
-    three_d_plot(work_dir, output_dir, ct_ggo_dir, ct_con_dir, ct_fib_dir)
+    three_d_plot(study_instance_id, work_dir, output_dir, ct_ggo_dir, ct_con_dir, ct_fib_dir)
 
     shutil.rmtree(ct_ggo_dir)
     shutil.rmtree(ct_con_dir)
@@ -125,6 +132,7 @@ def process_ct_instances(study_instance_id, ct_instances, work_dir, output_dir):
     shutil.rmtree(vtk_dir)
 
     write_progress(output_dir, "90")
+    update_progress_percent(study_instance_id, "90")
 
 
 def vtk_plot(vtk_dir, output_dir):
@@ -163,6 +171,7 @@ def generate_report(study_instance_id, work_dir, output_dir):
         shutil.rmtree(work_dir)
         # assemble_report(output_dir)
         write_progress(output_dir, "100")
+        update_progress_percent(study_instance_id, "100")
         zip_folder = zipfile.ZipFile(study_instance_id + '_result.zip', 'w', compression=zipfile.ZIP_STORED)
         for file in os.listdir(study_instance_id):
             zip_folder.write(study_instance_id + '/' + file)

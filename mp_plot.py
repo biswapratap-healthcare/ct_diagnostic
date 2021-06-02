@@ -9,7 +9,8 @@ from common import LABEL_GROUND_GLASS_OPACITY, LABEL_CONSOLIDATION, LABEL_FIBROS
 from datetime import timezone
 import datetime
 
-from utils import read_progress, write_progress
+from rest_client import update_progress_percent
+from utils import read_progress, write_progress, read_last_sent_progress, write_last_sent_progress
 
 
 def worker_plot(inp):
@@ -38,10 +39,15 @@ def worker_plot(inp):
     z = int(math.floor(float(meta_data_dicom.ImagePositionPatient[2])))
 
     percent = read_progress(study_instance_id)
+    last_sent_percent = read_last_sent_progress(study_instance_id)
 
-    if percent != '':
+    if percent != '' and last_sent_percent != '':
         new_percent = str(round(float(float(percent) + 19.0 / float(total_number_of_instances)), 2))
         write_progress(study_instance_id, new_percent)
+        delta = float(new_percent) - float(last_sent_percent)
+        if delta > 2.0:
+            write_last_sent_progress(study_instance_id, new_percent)
+            update_progress_percent(study_instance_id, new_percent)
     else:
         print("mp_plot: Got Empty Percentage")
 
