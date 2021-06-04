@@ -55,29 +55,28 @@ def create_app():
                 file_from_request = args['zip_file']
                 job_id = study_instance_id = output_dir = file_from_request.filename[:-4]
                 if os.path.exists(output_dir):
-                    assemble_report(output_dir)
+                    shutil.rmtree(output_dir)
+                os.makedirs(output_dir)
+                write_progress(job_id, "5")
+                file_dir = tempfile.mkdtemp()
+                work_dir = tempfile.mkdtemp()
+                ret, file_path = store_and_verify_file(file_from_request, work_dir=file_dir)
+                if ret == 0:
+                    with ZipFile(file_path, 'r') as zipObj:
+                        zipObj.extractall(work_dir)
+                    write_progress(job_id, "10")
+                    update_progress_percent(study_instance_id, "10")
+                    t = threading.Thread(target=generate_report, args=(study_instance_id, work_dir, output_dir))
+                    t.start()
+                    shutil.rmtree(file_dir)
+                    rv = dict()
+                    rv['status'] = "Started"
+                    rv['job_id'] = job_id
+                    return rv, 200
                 else:
-                    os.makedirs(output_dir)
-                    write_progress(job_id, "5")
-                    file_dir = tempfile.mkdtemp()
-                    work_dir = tempfile.mkdtemp()
-                    ret, file_path = store_and_verify_file(file_from_request, work_dir=file_dir)
-                    if ret == 0:
-                        with ZipFile(file_path, 'r') as zipObj:
-                            zipObj.extractall(work_dir)
-                        write_progress(job_id, "10")
-                        update_progress_percent(study_instance_id, "10")
-                        t = threading.Thread(target=generate_report, args=(study_instance_id, work_dir, output_dir))
-                        t.start()
-                        shutil.rmtree(file_dir)
-                        rv = dict()
-                        rv['status'] = "Started"
-                        rv['job_id'] = job_id
-                        return rv, 200
-                    else:
-                        rv = dict()
-                        rv['status'] = str(file_path)
-                        return rv, 404
+                    rv = dict()
+                    rv['status'] = str(file_path)
+                    return rv, 404
             except Exception as e:
                 rv = dict()
                 rv['status'] = str(e)
