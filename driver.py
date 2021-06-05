@@ -36,12 +36,14 @@ def process_ct_instances(study_instance_id, ct_instances, work_dir, output_dir):
     write_last_sent_progress(study_instance_id, "20")
     update_progress_percent(study_instance_id, "20")
 
-    if os.path.exists('points.pkl'):
-        with open('points.pkl', 'rb') as f:
+    points_file = study_instance_id + '_points.pkl'
+
+    if os.path.exists(points_file):
+        with open(points_file, 'rb') as f:
             rs = pickle.load(f)
     else:
         rs = process(study_instance_id, ct_instances)
-        with open('points.pkl', 'wb') as fp:
+        with open(points_file, 'wb') as fp:
             pickle.dump(rs, fp)
 
     write_progress(output_dir, "50")
@@ -182,7 +184,8 @@ def generate_report(study_instance_id, work_dir, output_dir):
                 zip_folder.write(study_instance_id + '/' + file)
             zip_folder.close()
             save_result(study_instance_id, study_instance_id + '_result.zip')
-            os.remove('points.pkl')
+            points_file = study_instance_id + '_points.pkl'
+            os.remove(points_file)
             shutil.rmtree(study_instance_id)
     except Exception as e:
         if os.path.exists(output_dir) is False:

@@ -14,7 +14,8 @@ from utils import get_instance_files
 
 def process_ct_instances(study_instance_idd, ct_instances):
     rets_list = process(study_instance_idd, ct_instances)
-    with open('points.pkl', 'wb') as fp:
+    points_file = study_instance_id + '_points.pkl'
+    with open(points_file, 'wb') as fp:
         pickle.dump(rets_list, fp)
     return ""
 
@@ -46,8 +47,10 @@ if __name__ == "__main__":
 
     study_instance_id = "1.2.826.0.1.3680043.8.1678.101.10637203703447639663.147272"
 
-    if os.path.exists('points.pkl'):
-        with open('points.pkl', 'rb') as f:
+    points_file = study_instance_id + '_points.pkl'
+
+    if os.path.exists(points_file):
+        with open(points_file, 'rb') as f:
             rs = pickle.load(f)
             type_map = dict()
 
