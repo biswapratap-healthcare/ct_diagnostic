@@ -17,9 +17,7 @@ def update_progress_percent(sid, percent):
 
 
 def save_result(sid, result_zip_path):
-    with open(result_zip_path, 'rb') as f:
-        r = requests.post("http://localhost:5000/save_result",
-                          data={'study_instance_id': sid},
-                          files={'file': f})
+    r = requests.post("http://localhost:5000/save_result",
+                      data={'study_instance_id': sid, 'file': result_zip_path})
     d = json.loads(r.text)
     return d['status']

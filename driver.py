@@ -169,21 +169,24 @@ def store_and_verify_file(file_from_request, work_dir):
 
 def generate_report(study_instance_id, work_dir, output_dir):
     try:
-        if os.path.exists(study_instance_id + '_result.zip'):
+        path = './results/' + study_instance_id + '_result.zip'
+        if os.path.exists(path):
             write_progress(output_dir, "100")
             update_progress_percent(study_instance_id, "100")
-            save_result(study_instance_id, study_instance_id + '_result.zip')
+            p = os.path.abspath(path)
+            save_result(study_instance_id, p)
         else:
             execute(study_instance_id, work_dir, output_dir)
             shutil.rmtree(work_dir)
             # assemble_report(output_dir)
             write_progress(output_dir, "100")
             update_progress_percent(study_instance_id, "100")
-            zip_folder = zipfile.ZipFile(study_instance_id + '_result.zip', 'w', compression=zipfile.ZIP_STORED)
+            zip_folder = zipfile.ZipFile(path, 'w', compression=zipfile.ZIP_STORED)
             for file in os.listdir(study_instance_id):
                 zip_folder.write(study_instance_id + '/' + file)
             zip_folder.close()
-            save_result(study_instance_id, study_instance_id + '_result.zip')
+            p = os.path.abspath(path)
+            save_result(study_instance_id, p)
             points_file = study_instance_id + '_points.pkl'
             os.remove(points_file)
             shutil.rmtree(study_instance_id)
