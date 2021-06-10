@@ -148,12 +148,7 @@ def predict(study_instance_id, work_dir, output_dir):
 
 
 def execute(study_instance_id, work_dir, output_dir):
-    try:
-        predict(study_instance_id, work_dir, output_dir)
-    except Exception as e:
-        with open(output_dir + '/' + ERROR_FILE, "a+") as f:
-            f.write(str(e))
-        update_in_progress_state(study_instance_id, 'FALSE')
+    predict(study_instance_id, work_dir, output_dir)
 
 
 def store_and_verify_file(file_from_request, work_dir):
@@ -168,6 +163,7 @@ def store_and_verify_file(file_from_request, work_dir):
 
 
 def generate_report(study_instance_id, work_dir, output_dir):
+    points_file = study_instance_id + '_points.pkl'
     try:
         path = './results/' + study_instance_id + '_result.zip'
         if os.path.exists(path):
@@ -187,7 +183,6 @@ def generate_report(study_instance_id, work_dir, output_dir):
             zip_folder.close()
             p = os.path.abspath(path)
             save_result(study_instance_id, p)
-            points_file = study_instance_id + '_points.pkl'
             os.remove(points_file)
             shutil.rmtree(study_instance_id)
     except Exception as e:
@@ -196,3 +191,5 @@ def generate_report(study_instance_id, work_dir, output_dir):
         with open(output_dir + '/' + ERROR_FILE, "a+") as f:
             f.write(str(e))
         update_in_progress_state(study_instance_id, 'FALSE')
+        os.remove(points_file)
+        shutil.rmtree(study_instance_id)
