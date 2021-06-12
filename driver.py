@@ -171,6 +171,10 @@ def generate_report(study_instance_id, work_dir, output_dir):
             update_progress_percent(study_instance_id, "100")
             p = os.path.abspath(path)
             save_result(study_instance_id, p)
+            if os.path.exists(points_file):
+                os.remove(points_file)
+            if os.path.exists(study_instance_id):
+                shutil.rmtree(study_instance_id)
         else:
             execute(study_instance_id, work_dir, output_dir)
             shutil.rmtree(work_dir)
@@ -183,13 +187,17 @@ def generate_report(study_instance_id, work_dir, output_dir):
             zip_folder.close()
             p = os.path.abspath(path)
             save_result(study_instance_id, p)
-            os.remove(points_file)
-            shutil.rmtree(study_instance_id)
+            if os.path.exists(points_file):
+                os.remove(points_file)
+            if os.path.exists(study_instance_id):
+                shutil.rmtree(study_instance_id)
     except Exception as e:
         if os.path.exists(output_dir) is False:
             os.makedirs(output_dir)
         with open(output_dir + '/' + ERROR_FILE, "a+") as f:
             f.write(str(e))
         update_in_progress_state(study_instance_id, 'FALSE')
-        os.remove(points_file)
-        shutil.rmtree(study_instance_id)
+        if os.path.exists(points_file):
+            os.remove(points_file)
+        if os.path.exists(study_instance_id):
+            shutil.rmtree(study_instance_id)

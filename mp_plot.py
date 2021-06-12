@@ -64,13 +64,13 @@ def worker_plot(inp):
                 meta_data_dicom_con.pixel_array[x][y] = 0
                 meta_data_dicom_fib.pixel_array[x][y] = 0
             elif affected_type.lower() == LABEL_CONSOLIDATION.lower():
-                print("Found Consolidation")
+                # print("Found Consolidation")
                 meta_data_dicom_ggo.pixel_array[x][y] = 0
                 meta_data_dicom_con.pixel_array[x][y] = 3400
                 meta_data_dicom_vtk.pixel_array[x][y] = 2000
                 meta_data_dicom_fib.pixel_array[x][y] = 0
             elif affected_type.lower() == LABEL_FIBROSIS.lower():
-                print("Found Fibrosis")
+                # print("Found Fibrosis")
                 meta_data_dicom_ggo.pixel_array[x][y] = 0
                 meta_data_dicom_con.pixel_array[x][y] = 0
                 meta_data_dicom_fib.pixel_array[x][y] = 3300
