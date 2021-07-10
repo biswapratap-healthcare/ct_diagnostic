@@ -192,13 +192,13 @@ def generate_report(study_instance_id, work_dir, output_dir):
             if os.path.exists(study_instance_id):
                 shutil.rmtree(study_instance_id)
     except Exception as e:
-        if 'weakref' not in str(e):
-            if os.path.exists(output_dir) is False:
-                os.makedirs(output_dir)
-            with open(output_dir + '/' + ERROR_FILE, "a+") as f:
-                f.write(str(e))
-            update_in_progress_state(study_instance_id, 'FALSE')
-            if os.path.exists(points_file):
-                os.remove(points_file)
-            if os.path.exists(study_instance_id):
-                shutil.rmtree(study_instance_id)
+        print("generate_report() exception --> " + str(e))
+        if os.path.exists(output_dir) is False:
+            os.makedirs(output_dir)
+        with open(output_dir + '/' + ERROR_FILE, "a+") as f:
+            f.write(str(e))
+        update_in_progress_state(study_instance_id, 'FALSE')
+        if os.path.exists(points_file):
+            os.remove(points_file)
+        if os.path.exists(study_instance_id):
+            shutil.rmtree(study_instance_id)

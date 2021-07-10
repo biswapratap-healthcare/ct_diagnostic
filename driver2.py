@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from skimage.morphology import disk, opening, closing
 
 from rest_client import update_progress_percent
-from utils import get_instance_files, write_progress
+from utils import get_instance_files, write_progress, dictify
 
 CT_OFFSET = 1024
 ZERO_VALUE = -2000
@@ -24,8 +24,14 @@ def read_dicom_array(in_path):
 
 
 def load_scans_2(folder):
+    slices = list()
     dicom_files = glob.glob(folder + '/**/*', recursive=True)
-    slices = [pydicom.dcmread(dicom_file) for dicom_file in dicom_files]
+    for dicom_file in dicom_files:
+        meta_data_dicom = pydicom.dcmread(dicom_file)
+        ds = dictify(meta_data_dicom)
+        modality = ds['Modality']
+        if modality == 'CT':
+            slices.append(meta_data_dicom)
     slices.sort(key=lambda x: float(x.ImagePositionPatient[2]))
     return slices
 
@@ -41,7 +47,13 @@ def load_scans(sid):
         print('error: No valid CT instances found !!')
         exit(-1)
 
-    slices = [pydicom.dcmread(ct_instance_file) for ct_instance_file in ct_instance_files]
+    slices = list()
+    for ct_instance_file in ct_instance_files:
+        meta_data_dicom = pydicom.dcmread(ct_instance_file)
+        ds = dictify(meta_data_dicom)
+        modality = ds['Modality']
+        if modality == 'CT':
+            slices.append(meta_data_dicom)
     slices.sort(key=lambda x: float(x.ImagePositionPatient[2]))
     return slices
 
