@@ -6,6 +6,8 @@ from os.path import isfile
 
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from skimage import measure
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from skimage.morphology import disk, opening, closing
 
