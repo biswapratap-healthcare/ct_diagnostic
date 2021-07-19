@@ -25,7 +25,7 @@ def worker(inp):
                 write_last_sent_progress(study_instance_id, new_percent)
                 update_progress_percent(study_instance_id, new_percent)
         else:
-            print("mp_plot: Got Empty Percentage")
+            print("mp: Got Empty Percentage")
 
         meta_data_dicom = pydicom.dcmread(ct_instance)
         ct_slice = CTSlice(meta_data_dicom)

@@ -177,14 +177,22 @@ def create_json(study_instance_id,
     final_json['StudyInstanceUID'] = study_instance_id
     final_json['num_of_positive_slices'] = str(abnormal_slice_count)
     final_json['num_of_lung_slices'] = str(total_slice_count)
-    final_json['ratio_of_positive_slices'] = str(round(float(float(abnormal_slice_count) * 100.0) / float(total_slice_count), 2))
+    if total_slice_count == 0:
+        final_json['ratio_of_positive_slices'] = 0.0
+    else:
+        final_json['ratio_of_positive_slices'] = \
+            str(round(float(float(abnormal_slice_count) * 100.0) / float(total_slice_count), 2))
     if ggo_count > 0:
         final_json['focal_ggo_detections'] = "True"
     else:
         final_json['focal_ggo_detections'] = "False"
     total_count = ggo_count + con_count + sub_count + fib_count + ple_count
-    final_json['ggo_ratio'] = str(round(float(float(ggo_count) * 100.0) / float(total_count), 2))
-    final_json['consolidation_ratio'] = str(round(float(float(con_count) * 100.0) / float(total_count), 2))
+    if total_count == 0:
+        final_json['ggo_ratio'] = 0
+        final_json['consolidation_ratio'] = 0
+    else:
+        final_json['ggo_ratio'] = str(round(float(float(ggo_count) * 100.0) / float(total_count), 2))
+        final_json['consolidation_ratio'] = str(round(float(float(con_count) * 100.0) / float(total_count), 2))
 
     if scores[5] > 5:
         result_type = 'Abnormal'
