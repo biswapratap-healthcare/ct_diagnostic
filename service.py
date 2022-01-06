@@ -19,7 +19,7 @@ from utils import read_progress, write_progress
 
 
 def create_app():
-    app = Flask(__name__, instance_relative_config=True)
+    app = Flask("foo", instance_relative_config=True)
 
     api = Api(
         app,
