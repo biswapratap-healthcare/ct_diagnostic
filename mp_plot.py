@@ -38,6 +38,8 @@ def worker_plot(inp):
 
     z = int(math.floor(float(meta_data_dicom.ImagePositionPatient[2])))
 
+    # print(z)
+
     percent = read_progress(study_instance_id)
     last_sent_percent = read_last_sent_progress(study_instance_id)
 
