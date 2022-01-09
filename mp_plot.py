@@ -114,7 +114,8 @@ def mp_plot(study_instance_id, rs, type_map, ct_ggo_dir, ct_con_dir, ct_fib_dir,
     inps = list()
     for r in rs:
         inps.append((r, type_map, ct_ggo_dir, ct_con_dir, ct_fib_dir, vtk_dir, len(rs), study_instance_id))
-    with concurrent.futures.ProcessPoolExecutor() as executor:
+    print("Plotting thread count = 50")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executor:
         executor.map(worker_plot, inps)
 
 

@@ -14,6 +14,8 @@ def worker(inp):
         ct_instance = inp[1]
         total_number_of_instances = inp[2]
 
+        print("Processing : " + str(os.path.basename(ct_instance)))
+
         percent = read_progress(study_instance_id)
         last_sent_percent = read_last_sent_progress(study_instance_id)
 
@@ -30,7 +32,7 @@ def worker(inp):
         meta_data_dicom = pydicom.dcmread(ct_instance)
         ct_slice = CTSlice(meta_data_dicom)
         ggo, con, sub, fib, ple, pne, nor, affected_points = ct_slice.get_box_label_distribution()
-        # print("Done : " + str(os.path.basename(ct_instance)))
+        print("Done : " + str(os.path.basename(ct_instance)))
     except Exception as e:
         print('mp:worker() exception = ' + str(e))
         ct_slice = None
@@ -54,8 +56,8 @@ def process(study_instance_id, ct_instances):
         modality = ds['Modality']
         if modality == 'CT':
             inps.append((study_instance_id, ct_instance, len(ct_instances)))
-    print("CPU count = " + str(os.cpu_count()))
-    with concurrent.futures.ProcessPoolExecutor(max_workers=os.cpu_count()) as executor:
+    print("Thread count = 50")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executor:
         rets = executor.map(worker, inps)
         rets_list = list()
         for ret in rets:

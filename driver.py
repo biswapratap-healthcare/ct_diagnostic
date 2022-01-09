@@ -116,13 +116,13 @@ def process_ct_instances(study_instance_id, ct_instances, work_dir, output_dir):
 
     # print("1")
 
-    mp_plot_2(study_instance_id,
-              rs,
-              type_map,
-              ct_ggo_dir,
-              ct_con_dir,
-              ct_fib_dir,
-              vtk_dir)
+    mp_plot(study_instance_id,
+            rs,
+            type_map,
+            ct_ggo_dir,
+            ct_con_dir,
+            ct_fib_dir,
+            vtk_dir)
 
     write_progress(output_dir, "80")
     update_progress_percent(study_instance_id, "80")
