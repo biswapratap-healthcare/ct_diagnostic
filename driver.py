@@ -46,97 +46,101 @@ def process_ct_instances(study_instance_id, ct_instances, work_dir, output_dir):
         with open(points_file, 'wb') as fp:
             pickle.dump(rs, fp)
 
-    write_progress(output_dir, "50")
-    update_progress_percent(study_instance_id, "50")
+    if len(rs) > 0:
+        write_progress(output_dir, "50")
+        update_progress_percent(study_instance_id, "50")
 
-    for r in rs:
-        ct_slice, ggo, con, sub, fib, ple, pne, nor, affected_points, meta_data_dicom = r
-        if not ct_slice.all_zeros:
-            ct_slice_objects.append(ct_slice)
-        if ggo or con or sub or fib or ple or pne > 10:
-            abnormal_slice_count += 1
-        ggo_count += ggo
-        con_count += con
-        sub_count += sub
-        fib_count += fib
-        ple_count += ple
-        pne_count += pne
-        if ct_slice.is_valid():
-            valid_ct_slice_objects.append(ct_slice)
+        for r in rs:
+            ct_slice, ggo, con, sub, fib, ple, pne, nor, affected_points, meta_data_dicom = r
+            if not ct_slice.all_zeros:
+                ct_slice_objects.append(ct_slice)
+            if ggo or con or sub or fib or ple or pne > 10:
+                abnormal_slice_count += 1
+            ggo_count += ggo
+            con_count += con
+            sub_count += sub
+            fib_count += fib
+            ple_count += ple
+            pne_count += pne
+            if ct_slice.is_valid():
+                valid_ct_slice_objects.append(ct_slice)
 
-    scores = get_25_score(ct_slice_objects, study_instance_id)
+        scores = get_25_score(ct_slice_objects, study_instance_id)
 
-    print('Total slice count: ' + str(total_number_of_slices))
-    print('Abnormal slices  : ' + str(abnormal_slice_count))
-    print('co_rads_score : ' + str(scores[5]))
-    print('right_superior_lobe_percentage_affected : ' + str(scores[0]))
-    print('right_middle_lobe_percentage_affected : ' + str(scores[1]))
-    print('right_inferior_lobe_percentage_affected : ' + str(scores[2]))
-    print('left_superior_lobe_percentage_affected : ' + str(scores[3]))
-    print('left_inferior_lobe_percentage_affected : ' + str(scores[4]))
+        print('Total slice count: ' + str(total_number_of_slices))
+        print('Abnormal slices  : ' + str(abnormal_slice_count))
+        print('co_rads_score : ' + str(scores[5]))
+        print('right_superior_lobe_percentage_affected : ' + str(scores[0]))
+        print('right_middle_lobe_percentage_affected : ' + str(scores[1]))
+        print('right_inferior_lobe_percentage_affected : ' + str(scores[2]))
+        print('left_superior_lobe_percentage_affected : ' + str(scores[3]))
+        print('left_inferior_lobe_percentage_affected : ' + str(scores[4]))
 
-    final_json = create_json(study_instance_id,
-                             scores,
-                             ggo_count,
-                             con_count,
-                             sub_count,
-                             fib_count,
-                             ple_count,
-                             abnormal_slice_count,
-                             total_number_of_slices)
+        final_json = create_json(study_instance_id,
+                                 scores,
+                                 ggo_count,
+                                 con_count,
+                                 sub_count,
+                                 fib_count,
+                                 ple_count,
+                                 abnormal_slice_count,
+                                 total_number_of_slices)
 
-    write_progress(output_dir, "55")
-    update_progress_percent(study_instance_id, "55")
+        write_progress(output_dir, "55")
+        update_progress_percent(study_instance_id, "55")
 
-    with open(output_dir + '/out.json', 'w') as f:
-        final_json_str = json.dumps(final_json, indent=4)
-        f.write(final_json_str)
+        with open(output_dir + '/out.json', 'w') as f:
+            final_json_str = json.dumps(final_json, indent=4)
+            f.write(final_json_str)
 
-    mp_slice_plot_2(rs, output_dir)
-    write_progress(output_dir, "60")
-    write_last_sent_progress(output_dir, "60")
-    update_progress_percent(study_instance_id, "60")
-    type_map = dict()
+        mp_slice_plot_2(rs, output_dir)
+        write_progress(output_dir, "60")
+        write_last_sent_progress(output_dir, "60")
+        update_progress_percent(study_instance_id, "60")
+        type_map = dict()
 
-    for r in rs:
-        for af in r[8]:
-            x = int(math.floor(af[0][0]))
-            y = int(math.floor(af[0][1]))
-            z = int(math.floor(af[0][2]))
-            v = af[1]
-            if type_map.get(z) is None:
-                type_map[z] = [(v, (x, y, z))]
-            else:
-                type_map.get(z).append((v, (x, y, z)))
+        for r in rs:
+            for af in r[8]:
+                x = int(math.floor(af[0][0]))
+                y = int(math.floor(af[0][1]))
+                z = int(math.floor(af[0][2]))
+                v = af[1]
+                if type_map.get(z) is None:
+                    type_map[z] = [(v, (x, y, z))]
+                else:
+                    type_map.get(z).append((v, (x, y, z)))
 
-    vtk_dir = tempfile.mkdtemp()
-    ct_ggo_dir = tempfile.mkdtemp()
-    ct_con_dir = tempfile.mkdtemp()
-    ct_fib_dir = tempfile.mkdtemp()
+        vtk_dir = tempfile.mkdtemp()
+        ct_ggo_dir = tempfile.mkdtemp()
+        ct_con_dir = tempfile.mkdtemp()
+        ct_fib_dir = tempfile.mkdtemp()
 
-    # print("1")
+        # print("1")
 
-    mp_plot(study_instance_id,
-            rs,
-            type_map,
-            ct_ggo_dir,
-            ct_con_dir,
-            ct_fib_dir,
-            vtk_dir)
+        mp_plot(study_instance_id,
+                rs,
+                type_map,
+                ct_ggo_dir,
+                ct_con_dir,
+                ct_fib_dir,
+                vtk_dir)
 
-    write_progress(output_dir, "80")
-    update_progress_percent(study_instance_id, "80")
+        write_progress(output_dir, "80")
+        update_progress_percent(study_instance_id, "80")
 
-    vtk_plot(vtk_dir, output_dir)
-    three_d_plot(study_instance_id, work_dir, output_dir, ct_ggo_dir, ct_con_dir, ct_fib_dir)
+        # vtk_plot(vtk_dir, output_dir)
+        three_d_plot(study_instance_id, work_dir, output_dir, ct_ggo_dir, ct_con_dir, ct_fib_dir)
 
-    shutil.rmtree(ct_ggo_dir)
-    shutil.rmtree(ct_con_dir)
-    shutil.rmtree(ct_fib_dir)
-    shutil.rmtree(vtk_dir)
+        shutil.rmtree(ct_ggo_dir)
+        shutil.rmtree(ct_con_dir)
+        shutil.rmtree(ct_fib_dir)
+        shutil.rmtree(vtk_dir)
 
-    write_progress(output_dir, "90")
-    update_progress_percent(study_instance_id, "90")
+        write_progress(output_dir, "90")
+        update_progress_percent(study_instance_id, "90")
+    else:
+        write_progress(output_dir, "90")
+        update_progress_percent(study_instance_id, "90")
 
 
 def vtk_plot(vtk_dir, output_dir):

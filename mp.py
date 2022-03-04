@@ -1,6 +1,7 @@
 import os
 
 import pydicom
+# import multiprocessing
 import concurrent.futures
 
 from ct_slice import CTSlice
@@ -56,8 +57,12 @@ def process(study_instance_id, ct_instances):
         modality = ds['Modality']
         if modality == 'CT':
             inps.append((study_instance_id, ct_instance, len(ct_instances)))
-    print("Thread count = 50")
-    with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executor:
+    if len(inps) == 0:
+        print("DICOM is most probably not a CT zip.")
+        return []
+    max_processes = 10
+    print("Processes count = " + str(max_processes))
+    with concurrent.futures.ProcessPoolExecutor(max_workers=max_processes) as executor:
         rets = executor.map(worker, inps)
         rets_list = list()
         for ret in rets:
